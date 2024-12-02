@@ -1,27 +1,44 @@
-﻿using System;
-using Microsoft.Azure.WebJobs.Description;
+﻿using Microsoft.Azure.WebJobs.Description;
+using MongoDB.Driver;
+using System;
 
-namespace Microsoft.Azure.WebJobs.Extensions.CosmosDb.Mongo
+namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 {
+    public enum MonitorLevel
+    {
+        Collection,
+        Database,
+        Cluster
+    }
+
+    /// <summary>
+    /// Defines the [CosmosDBMongoTrigger] attribute
+    /// </summary>
     [AttributeUsage(AttributeTargets.Parameter)]
     [Binding]
-    public class CosmosDBMongoTriggerAttribute : Attribute
+    public  class CosmosDBMongoTriggerAttribute : Attribute
     {
         /// <summary>
-        /// Constructs a new instance.
+        /// Triggers an event when changes occur on a monitored collection.
         /// </summary>
-        public CosmosDBMongoTriggerAttribute()
-        {
-        }
-
-        /// <summary>
-        /// Constructs a new instance.
-        /// </summary>
-        /// <param name="databaseName">The vcore database name.</param>
-        /// <param name="collectionName">The vcore collection name.</param>
+        /// <param name="databaseName">Name of the database to monitor for changes.</param>
+        /// <param name="collectionName">Name of the collection to monitor for changes.</param>
         public CosmosDBMongoTriggerAttribute(string databaseName, string collectionName)
         {
+            if (string.IsNullOrWhiteSpace(databaseName))
+            {
+                TriggerLevel = MonitorLevel.Cluster;
+                return;
+            }
             DatabaseName = databaseName;
+
+            if (string.IsNullOrWhiteSpace(collectionName))
+            {
+                TriggerLevel = MonitorLevel.Database;
+                return;
+            }
+
+            TriggerLevel = MonitorLevel.Collection;
             CollectionName = collectionName;
         }
 
@@ -29,15 +46,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.CosmosDb.Mongo
         /// The name of the database to which the parameter applies.
         /// May include binding parameters.
         /// </summary>
-        [AutoResolve]
-        public string DatabaseName { get; set; }
+        public string DatabaseName { get; set; } = string.Empty;
 
         /// <summary>
         /// The name of the collection to which the parameter applies. 
         /// May include binding parameters.
         /// </summary>
-        [AutoResolve]
-        public string CollectionName { get; set; }
+        public string CollectionName { get; set; } = string.Empty ;
 
         /// <summary>
         /// Optional.
@@ -49,7 +64,19 @@ namespace Microsoft.Azure.WebJobs.Extensions.CosmosDb.Mongo
         /// <summary>
         /// A string value indicating the app setting to use as the CosmosDB connection string.
         /// </summary>
-        [ConnectionString]
         public string ConnectionStringSetting { get; set; }
+
+
+        /// <summary>
+        /// The monitored level of trigger
+        /// </summary>
+        public MonitorLevel TriggerLevel { get; set; } = MonitorLevel.Collection;
+    }
+
+    public class CosmosDBMongoTriggerContext
+    {
+        public MongoClient MongoClient { get; set; }
+
+        public CosmosDBMongoTriggerAttribute ResolvedAttribute { get; set; }
     }
 }

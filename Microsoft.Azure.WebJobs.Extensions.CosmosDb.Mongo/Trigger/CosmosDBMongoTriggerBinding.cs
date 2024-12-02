@@ -1,5 +1,4 @@
-﻿using Amazon.Runtime.Internal.Transform;
-using Microsoft.Azure.WebJobs.Host.Bindings;
+﻿using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Listeners;
 using Microsoft.Azure.WebJobs.Host.Protocols;
 using Microsoft.Azure.WebJobs.Host.Triggers;
@@ -7,18 +6,17 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Threading.Tasks;
 
-namespace Microsoft.Azure.WebJobs.Extensions.CosmosDb.Mongo
+namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 {
     internal class CosmosDBMongoTriggerBinding : ITriggerBinding
     {
-        private readonly CosmosDBMongoTriggerContext triggerContext;
+        private readonly CosmosDBMongoTriggerContext _triggerContext;
 
         public CosmosDBMongoTriggerBinding(CosmosDBMongoTriggerContext context)
         {
-            this.triggerContext = context ?? throw new ArgumentNullException(nameof(context));
+            this._triggerContext = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         public Type TriggerValueType => typeof(ChangeStreamDocument<BsonDocument>);
@@ -42,7 +40,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.CosmosDb.Mongo
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             return Task.FromResult<IListener>(
-                new CosmosDBMongoTriggerListener(context.Executor, this.triggerContext));
+                new CosmosDBMongoTriggerListener(context.Executor, this._triggerContext));
         }
 
         public ParameterDescriptor ToParameterDescriptor()

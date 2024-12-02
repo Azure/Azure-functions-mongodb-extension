@@ -1,22 +1,21 @@
-﻿using System;
-using System.Globalization;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-using System.Xml.Linq;
+﻿using Amazon.Util.Internal;
+using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Azure.WebJobs.Host.Triggers;
+using System;
+using System.Reflection;
+using System.Threading.Tasks;
 
-namespace Microsoft.Azure.WebJobs.Extensions.CosmosDb.Mongo
+namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 {
     public class CosmosDBMongoTriggerBindingProvider : ITriggerBindingProvider
     {
-        private readonly CosmosDBMongoConfigProvider configProvider;
-        private readonly INameResolver nameResolver;
+        private readonly CosmosDBMongoConfigProvider _configProvider;
+        private readonly INameResolver _nameResolver;
 
         public CosmosDBMongoTriggerBindingProvider(INameResolver nameResolver, CosmosDBMongoConfigProvider configProvider)
         {
-            this.nameResolver = nameResolver;
-            this.configProvider = configProvider;
+            this._nameResolver = nameResolver;
+            this._configProvider = configProvider;
         }
 
         public Task<ITriggerBinding> TryCreateAsync(TriggerBindingProviderContext context)
@@ -31,14 +30,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.CosmosDb.Mongo
             attribute.CollectionName = ResolveAttributeValue(attribute.CollectionName);
             attribute.DatabaseName = ResolveAttributeValue(attribute.DatabaseName);
 
-            CosmosDBMongoTriggerContext triggerContext = this.configProvider.CreateContextTrigger(attribute);
+            CosmosDBMongoTriggerContext triggerContext = this._configProvider.CreateTriggerContext(attribute);
             return
                 Task.FromResult<ITriggerBinding>(new CosmosDBMongoTriggerBinding(triggerContext));
         }
 
         private string ResolveAttributeValue(string value)
         {
-            return this.nameResolver.Resolve(value) ?? value;
+            return this._nameResolver.Resolve(value) ?? value;
         }
     }
 }

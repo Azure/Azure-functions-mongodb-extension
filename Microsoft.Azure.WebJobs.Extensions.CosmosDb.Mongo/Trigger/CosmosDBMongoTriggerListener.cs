@@ -3,29 +3,26 @@ using Microsoft.Azure.WebJobs.Host.Listeners;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
-using System.Diagnostics;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Microsoft.Azure.WebJobs.Extensions.CosmosDb.Mongo
+namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 {
     public class CosmosDBMongoTriggerListener : IListener
     {
-        private readonly ITriggeredFunctionExecutor executor;
-        private readonly CosmosDBMongoTriggerContext context;
-        private MongoClient client;
-        private IMongoDatabase database;
-        private IMongoCollection<BsonDocument> collection;
-        private IChangeStreamCursor<ChangeStreamDocument<BsonDocument>> cursor;
-        private CancellationTokenSource cancellationTokenSource;
+        private readonly ITriggeredFunctionExecutor _executor;
+        private readonly CosmosDBMongoTriggerContext _context;
+        private IMongoDatabase _database;
+        private IMongoCollection<BsonDocument> _collection;
+        private MonitorLevel _triggerLevel;
+        private IChangeStreamCursor<ChangeStreamDocument<BsonDocument>> _cursor;
+        private CancellationTokenSource _cancellationTokenSource;
 
         public CosmosDBMongoTriggerListener(ITriggeredFunctionExecutor executor, CosmosDBMongoTriggerContext context)
         {
-            this.executor = executor ?? throw new ArgumentNullException(nameof(executor));
-            this.context = context ?? throw new ArgumentNullException(nameof(context));
-            this.cancellationTokenSource = new CancellationTokenSource();
+            this._executor = executor ?? throw new ArgumentNullException(nameof(executor));
+            this._context = context ?? throw new ArgumentNullException(nameof(context));
+            this._cancellationTokenSource = new CancellationTokenSource();
         }
 
         public void Cancel()
@@ -39,8 +36,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.CosmosDb.Mongo
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            this.database = this.context.MongoClient.GetDatabase(this.context.ResolvedAttribute.DatabaseName);
-            this.collection = this.database.GetCollection<BsonDocument>(this.context.ResolvedAttribute.CollectionName);
+            this._triggerLevel = this._context.ResolvedAttribute.TriggerLevel;
 
             try
             {
@@ -50,31 +46,49 @@ namespace Microsoft.Azure.WebJobs.Extensions.CosmosDb.Mongo
                         change.OperationType == ChangeStreamOperationType.Update ||
                         change.OperationType == ChangeStreamOperationType.Delete);
 
-                this.cursor = await this.collection.WatchAsync(
-                    pipeline,
-                    new ChangeStreamOptions
+                var changeStreamOption = new ChangeStreamOptions
                     {
                         FullDocument = ChangeStreamFullDocumentOption.UpdateLookup
-                    }, cancellationToken);
+                    };
+                switch (this._triggerLevel)
+                {
+                    case MonitorLevel.Cluster:
+                        this._cursor = await this._context.MongoClient.WatchAsync(
+                            pipeline, changeStreamOption, cancellationToken);
+                        break;
+                    case MonitorLevel.Database:
+                        this._database = this._context.MongoClient.GetDatabase(this._context.ResolvedAttribute.DatabaseName);
+                        this._cursor = await this._database.WatchAsync(
+                            pipeline, changeStreamOption, cancellationToken);
+                        break;
+                    case MonitorLevel.Collection:
+                        this._database = this._context.MongoClient.GetDatabase(this._context.ResolvedAttribute.DatabaseName);
+                        this._collection = this._database.GetCollection<BsonDocument>(this._context.ResolvedAttribute.CollectionName);
+                        this._cursor = await this._collection.WatchAsync(
+                            pipeline, changeStreamOption, cancellationToken);
+                        break;
+                    default:
+                        throw new InvalidOperationException("Unknown trigger level.");
+                }
 
                 _ = Task.Run(async () =>
                 {
-                    while (!this.cancellationTokenSource.Token.IsCancellationRequested)
+                    while (!this._cancellationTokenSource.Token.IsCancellationRequested)
                     {
-                        while (await this.cursor.MoveNextAsync(this.cancellationTokenSource.Token))
+                        while (await this._cursor.MoveNextAsync(this._cancellationTokenSource.Token))
                         {
-                            var batch = this.cursor.Current;
+                            var batch = this._cursor.Current;
                             foreach (var change in batch)
                             {
                                 var triggerData = new TriggeredFunctionData
                                 {
                                     TriggerValue = change
                                 };
-                                await this.executor.TryExecuteAsync(triggerData, this.cancellationTokenSource.Token);
+                                await this._executor.TryExecuteAsync(triggerData, this._cancellationTokenSource.Token);
                             }
                         }
                     }
-                }, this.cancellationTokenSource.Token);
+                }, this._cancellationTokenSource.Token);
             }
             catch (Exception ex)
             {
@@ -87,7 +101,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.CosmosDb.Mongo
         {
             try
             {
-                this.cursor.Dispose();
+                this._cursor.Dispose();
             }
             catch (Exception ex)
             {
@@ -99,15 +113,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.CosmosDb.Mongo
         {
             try
             {
-                while (await this.cursor.MoveNextAsync())
+                while (await this._cursor.MoveNextAsync())
                 {
-                    foreach (var change in this.cursor.Current)
+                    foreach (var change in this._cursor.Current)
                     {
                         var functionData = new TriggeredFunctionData
                         {
                             TriggerValue = change,
                         };
-                        var task = await this.executor.TryExecuteAsync(functionData, cancellationToken).ConfigureAwait(false);
+                        var task = await this._executor.TryExecuteAsync(functionData, cancellationToken).ConfigureAwait(false);
                     }
                 }
             }

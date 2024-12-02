@@ -1,28 +1,24 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using Microsoft.Azure.WebJobs.Host.Bindings;
+using Microsoft.Azure.WebJobs.Host.Config;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Description;
-using Microsoft.Azure.WebJobs.Host.Bindings;
-using Microsoft.Azure.WebJobs.Host.Config;
-using Microsoft.Extensions.Configuration;
-using System.Collections;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 
-namespace Microsoft.Azure.WebJobs.Extensions.CosmosDb.Mongo
+namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 {
     public class CosmosDBMongoConfigProvider : IExtensionConfigProvider
     {
-        private readonly ICosmosDBMongoBindingCollectorFactory cosmosdbMongoBindingCollectorFactory;
-        private readonly INameResolver nameResolver;
+        private readonly ICosmosDBMongoBindingCollectorFactory _cosmosdbMongoBindingCollectorFactory;
+        private readonly INameResolver _nameResolver;
 
         private ConcurrentDictionary<string, MongoClient> CollectorCache { get; } = new ConcurrentDictionary<string, MongoClient>();
 
         public CosmosDBMongoConfigProvider(ICosmosDBMongoBindingCollectorFactory cosmosdbMongoBindingCollectorFactory, INameResolver nameResolver)
         {
-            this.cosmosdbMongoBindingCollectorFactory = cosmosdbMongoBindingCollectorFactory;
-            this.nameResolver = nameResolver;
+            this._cosmosdbMongoBindingCollectorFactory = cosmosdbMongoBindingCollectorFactory;
+            this._nameResolver = nameResolver;
         }
 
         public void Initialize(ExtensionConfigContext context)
@@ -34,15 +30,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.CosmosDb.Mongo
 
             var bindingRule = context.AddBindingRule<CosmosDBMongoAttribute>();
             bindingRule.AddValidator(ValidateConnection);
-            bindingRule.BindToCollector<CosmosDBMongoBindingOpenType>(typeof(CosmosDBMongoBindingCollectorConverter<>), this);
+            bindingRule.BindToCollector<CosmosDBMongoBindingOpenType>(typeof(CosmosDBMongoBindingCollectorBuilder<>), this);
 
-            //bindingRule.BindToInput<MongoClient>(new CosmosDBMongoBindingClientConverter(this));
-            //bindingRule.BindToInput<ParameterBindingData>((attr) => CreateParameterBindingData(attr));
-            bindingRule.BindToInput<List<BsonDocument>>(typeof(CosmosDBMongoBindingListConverter<>), this);
+            bindingRule.BindToInput<List<BsonDocument>>(typeof(CosmosDBMongoBindingListBuilder<>), this);
 
             var triggerRule = context.AddBindingRule<CosmosDBMongoTriggerAttribute>();
             triggerRule.AddValidator(ValidateTriggerConnection);
-            triggerRule.BindToTrigger(new CosmosDBMongoTriggerBindingProvider(this.nameResolver, this));
+            triggerRule.BindToTrigger(new CosmosDBMongoTriggerBindingProvider(this._nameResolver, this));
         }
 
         internal CosmosDBMongoContext CreateContext(CosmosDBMongoAttribute attribute)
@@ -56,7 +50,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.CosmosDb.Mongo
             };
         }
 
-        internal CosmosDBMongoTriggerContext CreateContextTrigger(CosmosDBMongoTriggerAttribute attribute)
+        internal CosmosDBMongoTriggerContext CreateTriggerContext(CosmosDBMongoTriggerAttribute attribute)
         {
             MongoClient client = GetService(attribute.ConnectionStringSetting, attribute.DatabaseName, attribute.CollectionName);
 
@@ -79,7 +73,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.CosmosDb.Mongo
         internal MongoClient GetService(string connectionString, string databaseName, string collectionName)
         {
             string cacheKey = BuildCacheKey(connectionString, databaseName, collectionName);
-            return CollectorCache.GetOrAdd(cacheKey, (c) => this.cosmosdbMongoBindingCollectorFactory.CreateClient(connectionString));
+            return CollectorCache.GetOrAdd(cacheKey, (c) => this._cosmosdbMongoBindingCollectorFactory.CreateClient(connectionString));
         }
 
         internal void ValidateConnection(CosmosDBMongoAttribute attribute, Type paramType)
