@@ -1,26 +1,24 @@
-﻿using System.Collections.Concurrent;
+﻿using MongoDB.Bson;
+using MongoDB.Driver;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
-using MongoDB.Bson;
-using MongoDB.Driver;
 
-namespace Microsoft.Azure.WebJobs.Extensions.CosmosDb.Mongo
+namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 {
-    internal class CosmosDBMongoBindingListConverter<T> : IAsyncConverter<CosmosDBMongoAttribute, List<T>>
+    internal class CosmosDBMongoBindingListBuilder<T> : IAsyncConverter<CosmosDBMongoAttribute, List<T>>
         where T : class
     {
-        private readonly CosmosDBMongoConfigProvider configProvider;
+        private readonly CosmosDBMongoConfigProvider _configProvider;
 
-        public CosmosDBMongoBindingListConverter(CosmosDBMongoConfigProvider configProvider)
+        public CosmosDBMongoBindingListBuilder(CosmosDBMongoConfigProvider configProvider)
         {
-            this.configProvider = configProvider;
+            this._configProvider = configProvider;
         }
 
         public async Task<List<T>> ConvertAsync(CosmosDBMongoAttribute attribute, CancellationToken cancellationToken)
         {
-            CosmosDBMongoContext context = this.configProvider.CreateContext(attribute);
+            CosmosDBMongoContext context = this._configProvider.CreateContext(attribute);
 
             List<T> finalResults = new List<T>();
 

@@ -1,9 +1,22 @@
-﻿using System;
-using Microsoft.Azure.WebJobs.Description;
+﻿using Microsoft.Azure.WebJobs.Description;
+using MongoDB.Driver;
+using System;
 
-namespace Microsoft.Azure.WebJobs.Extensions.CosmosDb.Mongo
+namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 {
-    [AttributeUsage(AttributeTargets.Parameter)]
+    /// <summary>
+    /// Attribute used to bind to an Azure CosmosDB Mongo vCore account.
+    /// </summary>
+    /// <remarks>
+    /// The method parameter type can be one of the following:
+    /// <list type="bullet">
+    /// <item><description><see cref="ICollector{T}"/></description></item>
+    /// <item><description><see cref="IAsyncCollector{T}"/></description></item>
+    /// <item><description>out T</description></item>
+    /// <item><description>out T[]</description></item>
+    /// </list>
+    /// </remarks>
+    [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.ReturnValue)]
     [Binding]
     public class CosmosDBMongoAttribute : Attribute
     {
@@ -43,8 +56,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.CosmosDb.Mongo
         /// Optional.
         /// Only applies to output bindings.
         /// If true, the database and collection will be automatically created if they do not exist.
+        /// Default is false
         /// </summary>
-        public bool CreateIfNotExists { get; set; }
+        public bool CreateIfNotExists { get; set; } = false;
 
         /// <summary>
         /// A string value indicating the app setting to use as the CosmosDB connection string.
@@ -52,7 +66,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.CosmosDb.Mongo
         [ConnectionString]
         public string ConnectionStringSetting { get; set; }
 
+        /// <summary>
+        /// Gets or sets a mongo query expression for an input binding to execute on the collection and produce results.
+        /// May include binding parameters.
+        /// </summary>
         [AutoResolve]
         public string QueryString { get; set; }
+    }
+
+    public class CosmosDBMongoContext
+    {
+        public MongoClient MongoClient { get; set; }
+
+        public CosmosDBMongoAttribute ResolvedAttribute { get; set; }
     }
 }

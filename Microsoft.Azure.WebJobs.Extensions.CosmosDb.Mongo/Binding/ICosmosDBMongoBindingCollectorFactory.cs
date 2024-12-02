@@ -1,7 +1,6 @@
-﻿using System;
-using MongoDB.Driver;
+﻿using MongoDB.Driver;
 
-namespace Microsoft.Azure.WebJobs.Extensions.CosmosDb.Mongo
+namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 {
     public interface ICosmosDBMongoBindingCollectorFactory
     {

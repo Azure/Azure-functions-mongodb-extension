@@ -1,12 +1,11 @@
-﻿using System;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Host;
+﻿using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo;
 using Microsoft.Extensions.Logging;
-using System.Threading.Tasks;
-using Microsoft.Azure.WebJobs.Extensions.CosmosDb.Mongo;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Sample
 {
@@ -18,15 +17,15 @@ namespace Sample
            [CosmosDBMongo("%vCoreDatabaseBinding%", "%vCoreCollectionBinding%", ConnectionStringSetting = "vCoreConnectionStringBinding")] IAsyncCollector<TestClass> CosmosDBMongoCollector,
            ILogger log)
         {
-           log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
+            log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
 
-           TestClass item = new TestClass()
-           {
-               id = Guid.NewGuid().ToString(),
-               SomeData = "some random data"
-           };
+            TestClass item = new TestClass()
+            {
+                id = Guid.NewGuid().ToString(),
+                SomeData = "some random data"
+            };
 
-           await CosmosDBMongoCollector.AddAsync(item);
+            await CosmosDBMongoCollector.AddAsync(item);
         }
 
 
@@ -35,9 +34,9 @@ namespace Sample
            [CosmosDBMongoTrigger("vCoreDatabaseTrigger", "vCoreCollectionTrigger", ConnectionStringSetting = "vCoreConnectionStringTrigger")] ChangeStreamDocument<BsonDocument> doc,
            ILogger log)
         {
-           log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
+            log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
 
-           log.LogInformation(doc.FullDocument.ToString());
+            log.LogInformation(doc.FullDocument.ToString());
         }
 
         [FunctionName("InputBindingSample")]

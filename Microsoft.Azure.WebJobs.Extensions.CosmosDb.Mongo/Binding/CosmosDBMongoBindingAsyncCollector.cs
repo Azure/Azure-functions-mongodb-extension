@@ -1,23 +1,15 @@
-﻿using System;
-using System.IO;
+﻿using MongoDB.Driver;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-using MongoDB.Bson;
-using MongoDB.Driver;
-using Microsoft.Azure.WebJobs;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System.Collections;
-using System.Linq;
-using System.Collections.Generic;
 
-namespace Microsoft.Azure.WebJobs.Extensions.CosmosDb.Mongo
+namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 {
     public class CosmosDBMongoBindingAsyncCollector<T> : IAsyncCollector<T>
     {
-        private CosmosDBMongoContext mongoContext;
+        private CosmosDBMongoContext _mongoContext;
 
-        public CosmosDBMongoBindingAsyncCollector(CosmosDBMongoContext mongoContext) => this.mongoContext = mongoContext;
+        public CosmosDBMongoBindingAsyncCollector(CosmosDBMongoContext mongoContext) => this._mongoContext = mongoContext;
 
         public async Task AddAsync(T item, CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -26,12 +18,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.CosmosDb.Mongo
                 throw new ArgumentNullException(nameof(item));
             }
 
-            if (this.mongoContext.ResolvedAttribute.CreateIfNotExists)
+            if (this._mongoContext.ResolvedAttribute.CreateIfNotExists)
             {
-                InitializeCollection(this.mongoContext);
+                await InitializeCollection(this._mongoContext);
             }
 
-            await UpsertDocument(this.mongoContext, item);
+            await UpsertDocument(this._mongoContext, item);
         }
 
         public Task FlushAsync(CancellationToken cancellationToken = default(CancellationToken))
@@ -40,16 +32,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.CosmosDb.Mongo
             return Task.FromResult(0);
         }
 
-        private static void InitializeCollection(CosmosDBMongoContext context)
+        private static async Task InitializeCollection(CosmosDBMongoContext context)
         {
-            var database = context.MongoClient.GetDatabase(context.ResolvedAttribute.DatabaseName);
-
-            var collectionExists = database.ListCollectionNames().ToList().Contains(context.ResolvedAttribute.CollectionName);
-            if (!collectionExists)
+            if (context.ResolvedAttribute.CreateIfNotExists)
             {
-                Console.WriteLine($"creating collection {context.ResolvedAttribute.CollectionName}");
-                database.CreateCollection(context.ResolvedAttribute.CollectionName);
+               await MongoUtility.CreateCollectionIfNotExistAsync(context);
             }
+
+            var database = context.MongoClient.GetDatabase(context.ResolvedAttribute.DatabaseName);
+            // should throw error if _collection not exist and createifnotexists is false
+            var collection = database.GetCollection<T>(context.ResolvedAttribute.CollectionName);
         }
 
         private static async Task UpsertDocument(CosmosDBMongoContext context, T doc)

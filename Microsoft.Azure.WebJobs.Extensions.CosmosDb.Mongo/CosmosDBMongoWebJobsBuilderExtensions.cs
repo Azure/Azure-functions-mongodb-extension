@@ -1,7 +1,7 @@
-﻿using System;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 
-namespace Microsoft.Azure.WebJobs.Extensions.CosmosDb.Mongo
+namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 {
     public static class CosmosDBMongoWebJobsBuilderExtensions
     {
