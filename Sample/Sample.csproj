@@ -7,7 +7,7 @@
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="1.0.38" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Microsoft.Azure.WebJobs.Extensions.CosmosDb.Mongo\Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.csproj" />
+    <ProjectReference Include="..\Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo\Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">

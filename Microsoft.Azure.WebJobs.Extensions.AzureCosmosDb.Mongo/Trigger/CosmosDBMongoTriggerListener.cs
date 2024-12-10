@@ -44,6 +44,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                     .Match(change =>
                         change.OperationType == ChangeStreamOperationType.Insert ||
                         change.OperationType == ChangeStreamOperationType.Update ||
+                        change.OperationType == ChangeStreamOperationType.Replace ||
                         change.OperationType == ChangeStreamOperationType.Delete);
 
                 var changeStreamOption = new ChangeStreamOptions
