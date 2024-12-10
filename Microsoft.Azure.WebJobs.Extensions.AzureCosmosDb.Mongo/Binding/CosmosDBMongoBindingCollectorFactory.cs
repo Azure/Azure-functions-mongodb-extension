@@ -12,7 +12,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                 throw new ArgumentNullException(nameof(connectionString));
             }
 
-            return new MongoClient(connectionString);
+            var settings = MongoClientSettings.FromConnectionString(connectionString);
+            settings.ApplicationName = CosmosDBMongoConstant.AzureFunctionApplicationName;
+
+            return new MongoClient(settings);
         }
     }
 }
