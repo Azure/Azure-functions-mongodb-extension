@@ -80,15 +80,15 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
 
-    # - name: Set up .NET Core 2.1
-    #   uses: actions/setup-dotnet@v3
-    #   with:
-    #     dotnet-version: '2.1.x'
-
-    - name: Set up .NET Core 6
-      uses: actions/setup-dotnet@v6
+    - name: Set up .NET Core 2.1
+      uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: '6.x.x'
+        dotnet-version: '2.1.x'
+
+    - name: Set up .NET Core 3.1
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '3.1.x'
 
     - name: Restore dependencies
       run: dotnet restore $solution
