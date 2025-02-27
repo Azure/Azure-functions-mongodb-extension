@@ -14,6 +14,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
     internal static class Events
     {
         public static readonly EventId OnError = new EventId(1000, "OnTriggerError");
+        public static readonly EventId OnIntializedCollection = new EventId(2000, "OnIntializedCollection");
+        public static readonly EventId OnBindingDataAdded = new EventId(3000, "OnBindingDataAdded");
+        public static readonly EventId OnBindingDataError = new EventId(4000, "OnBindingDataError");
         public static readonly EventId OnScaling = new EventId(5000, "OnScaling");
         public static readonly EventId OnListenerStarted  = new EventId(6000, "OnListenerStarted");
         public static readonly EventId OnListenerStopped = new EventId(7000, "OnListenerStopped");

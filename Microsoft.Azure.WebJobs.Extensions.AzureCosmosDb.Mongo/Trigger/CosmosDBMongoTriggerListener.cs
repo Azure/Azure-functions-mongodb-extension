@@ -97,7 +97,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             }
             catch (Exception ex)
             {
-                this._logger.LogError(Events.OnListenerStartError, "Starting the listener failed. Exception: {Excepiton}", ex);
+                this._logger.LogError(Events.OnListenerStartError, $"Starting the listener failed. Exception: {ex.Message}");
                 throw;
             }
         }
@@ -111,7 +111,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             }
             catch (Exception ex)
             {
-                this._logger.LogError(Events.OnListenerStopError, "Stopping the listener failed. Exception: {Excepiton}", ex);
+                this._logger.LogError(Events.OnListenerStopError, $"Stopping the listener failed. Exception: {ex.Message}");
             }
         }
 

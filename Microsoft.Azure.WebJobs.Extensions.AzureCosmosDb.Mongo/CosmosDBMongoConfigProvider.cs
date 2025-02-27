@@ -36,7 +36,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 
             var bindingRule = context.AddBindingRule<CosmosDBMongoAttribute>();
             bindingRule.AddValidator(ValidateConnection);
-            bindingRule.BindToCollector<CosmosDBMongoBindingOpenType>(typeof(CosmosDBMongoBindingCollectorBuilder<>), this);
+            bindingRule.BindToCollector<CosmosDBMongoBindingOpenType>(typeof(CosmosDBMongoBindingCollectorBuilder<>), this, this._loggerFactory);
 
             bindingRule.BindToInput<List<BsonDocument>>(typeof(CosmosDBMongoBindingListBuilder<>), this);
 
