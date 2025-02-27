@@ -31,11 +31,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                 }
 
                 await UpsertDocument(this._mongoContext, item);
-                this._logger.LogDebug(Events.OnBindingDataAdded, "Document upserted successfully.");
+                this._logger.LogDebug(Events.OnBindingOutputDataAdded, "Document upserted successfully.");
             }
             catch (Exception ex)
             {
-                this._logger.LogError(Events.OnBindingDataError, $"Error upserting document: {ex.Message}");
+                this._logger.LogError(Events.OnBindingOutputDataError, $"Error upserting document: {ex.Message}");
             }
         }
 
