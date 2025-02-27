@@ -1,5 +1,6 @@
 ﻿using Microsoft.Azure.WebJobs.Host.Executors;
 using Microsoft.Azure.WebJobs.Host.Listeners;
+using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
@@ -12,16 +13,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
     {
         private readonly ITriggeredFunctionExecutor _executor;
         private readonly CosmosDBMongoTriggerContext _context;
+        private readonly ILogger _logger;
         private IMongoDatabase _database;
         private IMongoCollection<BsonDocument> _collection;
         private MonitorLevel _triggerLevel;
         private IChangeStreamCursor<ChangeStreamDocument<BsonDocument>> _cursor;
         private CancellationTokenSource _cancellationTokenSource;
 
-        public CosmosDBMongoTriggerListener(ITriggeredFunctionExecutor executor, CosmosDBMongoTriggerContext context)
+        public CosmosDBMongoTriggerListener(ITriggeredFunctionExecutor executor, CosmosDBMongoTriggerContext context, ILogger logger)
         {
             this._executor = executor ?? throw new ArgumentNullException(nameof(executor));
             this._context = context ?? throw new ArgumentNullException(nameof(context));
+            this._logger = logger;
             this._cancellationTokenSource = new CancellationTokenSource();
         }
 
@@ -90,10 +93,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                         }
                     }
                 }, this._cancellationTokenSource.Token);
+                this._logger.LogDebug(Events.OnListenerStarted, "MongoDB trigger listener started.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                this._logger.LogError(Events.OnListenerStartError, "Starting the listener failed. Exception: {Excepiton}", ex);
                 throw;
             }
         }
@@ -103,10 +107,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             try
             {
                 this._cursor.Dispose();
+                this._logger.LogDebug(Events.OnListenerStopped, "MongoDB trigger listener stopped.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                this._logger.LogError(Events.OnListenerStopError, "Stopping the listener failed. Exception: {Excepiton}", ex);
             }
         }
 
