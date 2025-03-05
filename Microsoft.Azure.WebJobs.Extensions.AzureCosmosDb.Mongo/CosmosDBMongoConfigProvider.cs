@@ -16,15 +16,21 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         private readonly INameResolver _nameResolver;
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
+        private readonly CosmosDBMongoTriggerMetricsRegistry _registry;
 
         private ConcurrentDictionary<string, MongoClient> CollectorCache { get; } = new ConcurrentDictionary<string, MongoClient>();
 
-        public CosmosDBMongoConfigProvider(ICosmosDBMongoBindingCollectorFactory cosmosdbMongoBindingCollectorFactory, INameResolver nameResolver, ILoggerFactory loggerFactory)
+        public CosmosDBMongoConfigProvider(
+            ICosmosDBMongoBindingCollectorFactory cosmosdbMongoBindingCollectorFactory, 
+            INameResolver nameResolver, 
+            ILoggerFactory loggerFactory,
+            CosmosDBMongoTriggerMetricsRegistry registry)
         {
             this._cosmosdbMongoBindingCollectorFactory = cosmosdbMongoBindingCollectorFactory;
             this._nameResolver = nameResolver;
             this._loggerFactory = loggerFactory;
             this._logger = loggerFactory.CreateLogger(LogCategories.CreateTriggerCategory(CosmosDBMongoConstant.AzureFunctionTelemetryCategory));
+            this._registry = registry;
         }
 
         public void Initialize(ExtensionConfigContext context)
@@ -42,7 +48,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 
             var triggerRule = context.AddBindingRule<CosmosDBMongoTriggerAttribute>();
             triggerRule.AddValidator(ValidateTriggerConnection);
-            triggerRule.BindToTrigger(new CosmosDBMongoTriggerBindingProvider(this._nameResolver, this, this._loggerFactory));
+            triggerRule.BindToTrigger(new CosmosDBMongoTriggerBindingProvider(this._nameResolver, this, this._loggerFactory, this._registry));
         }
 
         internal CosmosDBMongoContext CreateContext(CosmosDBMongoAttribute attribute)

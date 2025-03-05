@@ -13,9 +13,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             }
 
             builder.AddExtension<CosmosDBMongoConfigProvider>();
-
             builder.Services.AddSingleton<ICosmosDBMongoBindingCollectorFactory, CosmosDBMongoBindingCollectorFactory>();
 
+            builder.Services.AddSingleton<CosmosDBMongoTriggerMetricsRegistry>();
+            builder.Services.AddSingleton<CosmosDBMongoScalerProvider>();
             return builder;
         }
     }

@@ -11,10 +11,15 @@ using static Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.CosmosDBMong
 
 namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 {
-    internal class CosmosDBMongoScalerProvider : IScaleMonitorProvider, ITargetScalerProvider
+    internal class CosmosDBMongoScalerProvider : IScaleMonitorProvider
+#if NETSTANDARD2_1_OR_GREATER
+        , ITargetScalerProvider
+#endif
     {
         private readonly IScaleMonitor _scaleMonitor;
+#if NETSTANDARD2_1_OR_GREATER
         private readonly ITargetScaler _targetScaler;
+#endif
 
         public CosmosDBMongoScalerProvider(
             IServiceProvider serviceProvider, 
@@ -39,11 +44,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                 metricsProvider,
                 loggerFactory.CreateLogger<CosmosDBMongoScaleMonitor>());
 
+#if NETSTANDARD2_1_OR_GREATER
             _targetScaler = new CosmosDBMongoTargetScaler(
                 triggerMetadata.FunctionName,
                 metadata.MaxItemsPerInvocation,
                 metricsProvider,
                 loggerFactory.CreateLogger<CosmosDBMongoTargetScaler>());
+#endif
         }
 
         public IScaleMonitor GetMonitor()
@@ -51,10 +58,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             return _scaleMonitor;
         }
 
+#if NETSTANDARD2_1_OR_GREATER
         public ITargetScaler GetTargetScaler()
         {
             return _targetScaler;
         }
+#endif
 
         internal class CosmosDbMongoMetadata
         {

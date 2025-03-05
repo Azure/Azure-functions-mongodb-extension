@@ -9,6 +9,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
     {
         internal const string AzureFunctionApplicationName = "AzureCosmosDBMongoExtension";
         internal const string AzureFunctionTelemetryCategory = "CosmosDBMongo";
+        internal const int MaxDurationForTriggerProcessingEvent = -30; // should be a negative value as we are adding it to the current time
     }
 
     internal static class Events
@@ -20,6 +21,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         public static readonly EventId OnBindingInputQuery = new EventId(4000, "OnBindingInputQuery");
         public static readonly EventId OnBindingInputQueryError = new EventId(4010, "OnBindingInputQueryError");
         public static readonly EventId OnScaling = new EventId(5000, "OnScaling");
+        public static readonly EventId OnScalingError = new EventId(5010, "OnScalingError");
         public static readonly EventId OnListenerStarted  = new EventId(6000, "OnListenerStarted");
         public static readonly EventId OnListenerStopped = new EventId(7000, "OnListenerStopped");
         public static readonly EventId OnListenerStartError  = new EventId(6010, "OnListenerStartError ");
