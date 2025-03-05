@@ -4,6 +4,8 @@ using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -82,14 +84,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                         while (await this._cursor.MoveNextAsync(this._cancellationTokenSource.Token))
                         {
                             var batch = this._cursor.Current;
-                            foreach (var change in batch)
-                            {
-                                var triggerData = new TriggeredFunctionData
-                                {
-                                    TriggerValue = change
-                                };
-                                await this._executor.TryExecuteAsync(triggerData, this._cancellationTokenSource.Token);
-                            }
+                            await ProcessBatchAsync(batch);
                         }
                     }
                 }, this._cancellationTokenSource.Token);
@@ -115,29 +110,34 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             }
         }
 
-        private async Task ListenForChangesAsync(CancellationToken cancellationToken)
+        private async Task ProcessBatchAsync(IEnumerable<ChangeStreamDocument<BsonDocument>> batch)
         {
             try
             {
-                while (await this._cursor.MoveNextAsync())
+                var metrics = new CosmosDBMongoTriggerMetrics(batch.Count());
+                CosmosDBMongoMetricsStore.AddMetrics(_context.ResolvedAttribute.FunctionId, _context.ResolvedAttribute.DatabaseName, _context.ResolvedAttribute.CollectionName, metrics);
+
+                var tasks = batch.Select(async change =>
                 {
-                    foreach (var change in this._cursor.Current)
+                    try
                     {
-                        var functionData = new TriggeredFunctionData
+                        var triggerData = new TriggeredFunctionData
                         {
-                            TriggerValue = change,
+                            TriggerValue = change
                         };
-                        var task = await this._executor.TryExecuteAsync(functionData, cancellationToken).ConfigureAwait(false);
+                        await this._executor.TryExecuteAsync(triggerData, this._cancellationTokenSource.Token);
                     }
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                Console.WriteLine("MongoDB trigger listener cancelled.");
+                    finally
+                    {
+                        metrics.DecrementPendingCount();
+                    }
+                });
+
+                await Task.WhenAll(tasks);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                _logger.LogError(Events.OnError, $"Error processing batch of changes. Exception: {ex.Message}");
                 throw;
             }
         }

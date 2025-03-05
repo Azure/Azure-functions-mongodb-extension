@@ -16,7 +16,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
     /// </summary>
     [AttributeUsage(AttributeTargets.Parameter)]
     [Binding]
-    public  class CosmosDBMongoTriggerAttribute : Attribute
+    public class CosmosDBMongoTriggerAttribute : Attribute
     {
         /// <summary>
         /// Triggers an event when changes occur on a monitored collection.
@@ -41,6 +41,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             TriggerLevel = MonitorLevel.Collection;
             CollectionName = collectionName;
         }
+
+        /// <summary>
+        /// The id of trigger function.
+        /// </summary>
+        public string FunctionId { get; set; } = string.Empty;
 
         /// <summary>
         /// The name of the database to which the parameter applies.

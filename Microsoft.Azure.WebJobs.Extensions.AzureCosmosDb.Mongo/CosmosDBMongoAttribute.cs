@@ -39,6 +39,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         }
 
         /// <summary>
+        /// The id of binding function.
+        /// </summary>
+        public string functionId { get; set; } = string.Empty;
+
+        /// <summary>
         /// The name of the database to which the parameter applies.
         /// May include binding parameters.
         /// </summary>
