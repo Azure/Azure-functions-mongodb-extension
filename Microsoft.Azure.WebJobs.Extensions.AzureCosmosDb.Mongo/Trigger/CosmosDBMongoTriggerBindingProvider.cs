@@ -14,29 +14,36 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         private readonly CosmosDBMongoConfigProvider _configProvider;
         private readonly INameResolver _nameResolver;
         private readonly ILogger _logger;
+        private readonly CosmosDBMongoTriggerMetricsRegistry _registry;
 
-        public CosmosDBMongoTriggerBindingProvider(INameResolver nameResolver, CosmosDBMongoConfigProvider configProvider, ILoggerFactory loggerFactory)
+        public CosmosDBMongoTriggerBindingProvider(
+            INameResolver nameResolver, 
+            CosmosDBMongoConfigProvider configProvider, 
+            ILoggerFactory loggerFactory,
+            CosmosDBMongoTriggerMetricsRegistry registry)
         {
             this._nameResolver = nameResolver;
             this._configProvider = configProvider;
             this._logger = loggerFactory.CreateLogger(LogCategories.CreateTriggerCategory(CosmosDBMongoConstant.AzureFunctionTelemetryCategory));
+            this._registry = registry;
         }
 
         public Task<ITriggerBinding> TryCreateAsync(TriggerBindingProviderContext context)
         {
             if (context == null)
                 throw new ArgumentNullException("context");
-            
+                
             var attribute = context.Parameter.GetCustomAttribute<CosmosDBMongoTriggerAttribute>(inherit: false);
             if (attribute == null)
                 return Task.FromResult<ITriggerBinding>(null);
+
             attribute.ConnectionStringSetting = ResolveAttributeValue(attribute.ConnectionStringSetting);
             attribute.CollectionName = ResolveAttributeValue(attribute.CollectionName);
             attribute.DatabaseName = ResolveAttributeValue(attribute.DatabaseName);
 
             CosmosDBMongoTriggerContext triggerContext = this._configProvider.CreateTriggerContext(attribute);
-            return
-                Task.FromResult<ITriggerBinding>(new CosmosDBMongoTriggerBinding(triggerContext, this._logger));
+            return Task.FromResult<ITriggerBinding>(
+                new CosmosDBMongoTriggerBinding(triggerContext, this._registry, this._logger));
         }
 
         private string ResolveAttributeValue(string value)

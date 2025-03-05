@@ -15,10 +15,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
     {
         private readonly CosmosDBMongoTriggerContext _triggerContext;
         private readonly ILogger _logger;
+        private readonly CosmosDBMongoTriggerMetricsRegistry _registry;
 
-        public CosmosDBMongoTriggerBinding(CosmosDBMongoTriggerContext context, ILogger logger)
+        public CosmosDBMongoTriggerBinding(
+            CosmosDBMongoTriggerContext context, 
+            CosmosDBMongoTriggerMetricsRegistry registry,
+            ILogger logger)
         {
             this._triggerContext = context ?? throw new ArgumentNullException(nameof(context));
+            this._registry = registry ?? throw new ArgumentNullException(nameof(registry));
             this._logger = logger;
         }
 
@@ -43,7 +48,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             return Task.FromResult<IListener>(
-                new CosmosDBMongoTriggerListener(context.Executor, this._triggerContext, this._logger));
+                new CosmosDBMongoTriggerListener(
+                    context.Executor, 
+                    context.Descriptor.Id,
+                    this._triggerContext, 
+                    this._registry,
+                    this._logger));
         }
 
         public ParameterDescriptor ToParameterDescriptor()
