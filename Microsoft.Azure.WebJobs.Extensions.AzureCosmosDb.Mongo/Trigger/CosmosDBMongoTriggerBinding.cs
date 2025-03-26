@@ -2,6 +2,7 @@
 using Microsoft.Azure.WebJobs.Host.Listeners;
 using Microsoft.Azure.WebJobs.Host.Protocols;
 using Microsoft.Azure.WebJobs.Host.Triggers;
+using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
@@ -13,10 +14,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
     internal class CosmosDBMongoTriggerBinding : ITriggerBinding
     {
         private readonly CosmosDBMongoTriggerContext _triggerContext;
+        private readonly ILogger _logger;
 
-        public CosmosDBMongoTriggerBinding(CosmosDBMongoTriggerContext context)
+        public CosmosDBMongoTriggerBinding(CosmosDBMongoTriggerContext context, ILogger logger)
         {
             this._triggerContext = context ?? throw new ArgumentNullException(nameof(context));
+            this._logger = logger;
         }
 
         public Type TriggerValueType => typeof(ChangeStreamDocument<BsonDocument>);
@@ -40,7 +43,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             return Task.FromResult<IListener>(
-                new CosmosDBMongoTriggerListener(context.Executor, this._triggerContext));
+                new CosmosDBMongoTriggerListener(context.Executor, this._triggerContext, this._logger));
         }
 
         public ParameterDescriptor ToParameterDescriptor()

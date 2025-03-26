@@ -1,5 +1,7 @@
 ﻿using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Config;
+using Microsoft.Azure.WebJobs.Logging;
+using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
@@ -12,13 +14,17 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
     {
         private readonly ICosmosDBMongoBindingCollectorFactory _cosmosdbMongoBindingCollectorFactory;
         private readonly INameResolver _nameResolver;
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly ILogger _logger;
 
         private ConcurrentDictionary<string, MongoClient> CollectorCache { get; } = new ConcurrentDictionary<string, MongoClient>();
 
-        public CosmosDBMongoConfigProvider(ICosmosDBMongoBindingCollectorFactory cosmosdbMongoBindingCollectorFactory, INameResolver nameResolver)
+        public CosmosDBMongoConfigProvider(ICosmosDBMongoBindingCollectorFactory cosmosdbMongoBindingCollectorFactory, INameResolver nameResolver, ILoggerFactory loggerFactory)
         {
             this._cosmosdbMongoBindingCollectorFactory = cosmosdbMongoBindingCollectorFactory;
             this._nameResolver = nameResolver;
+            this._loggerFactory = loggerFactory;
+            this._logger = loggerFactory.CreateLogger(LogCategories.CreateTriggerCategory(CosmosDBMongoConstant.AzureFunctionTelemetryCategory));
         }
 
         public void Initialize(ExtensionConfigContext context)
@@ -30,13 +36,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 
             var bindingRule = context.AddBindingRule<CosmosDBMongoAttribute>();
             bindingRule.AddValidator(ValidateConnection);
-            bindingRule.BindToCollector<CosmosDBMongoBindingOpenType>(typeof(CosmosDBMongoBindingCollectorBuilder<>), this);
+            bindingRule.BindToCollector<CosmosDBMongoBindingOpenType>(typeof(CosmosDBMongoBindingCollectorBuilder<>), this, this._loggerFactory);
 
             bindingRule.BindToInput<List<BsonDocument>>(typeof(CosmosDBMongoBindingListBuilder<>), this);
 
             var triggerRule = context.AddBindingRule<CosmosDBMongoTriggerAttribute>();
             triggerRule.AddValidator(ValidateTriggerConnection);
-            triggerRule.BindToTrigger(new CosmosDBMongoTriggerBindingProvider(this._nameResolver, this));
+            triggerRule.BindToTrigger(new CosmosDBMongoTriggerBindingProvider(this._nameResolver, this, this._loggerFactory));
         }
 
         internal CosmosDBMongoContext CreateContext(CosmosDBMongoAttribute attribute)
