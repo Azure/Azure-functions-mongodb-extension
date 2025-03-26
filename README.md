@@ -1,33 +1,61 @@
-# Project
+# Azure WebJobs CosmosDB Mongo Extensions
 
-> This repo has been populated by an initial template to help get you started. Please
-> make sure to update the content to build a great experience for community-building.
+This repo contains binding extensions for the Azure WebJobs SDK intended for working with [Azure CosmosDB for Mongo](https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/introduction)'s various APIs. See the [Azure WebJobs SDK repo](https://github.com/Azure/azure-webjobs-sdk) for more information on WebJobs.
 
-As the maintainer of this project, please make a few updates:
+## MongoDB Api
 
-- Improving this README.MD file to provide a great experience
-- Updating SUPPORT.MD with content about this project's support experience
-- Understanding the security reporting process in SECURITY.MD
-- Remove this section from the README
+To configure the binding, add the Mongo connection string as an app setting or environment variable. The name of the setting can be changed with the `ConnectionStringSetting` property of the binding attribute. An example of usage is [here](/Azure-functions-mongodb-extension/Sample/Sample.cs).
 
-## Contributing
+### Output Binding
 
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
-Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
+In this example, the `item` object is upserted into the `ItemCollection` collection of the `ItemDb` database.
 
-When you submit a pull request, a CLA bot will automatically determine whether you need to provide
-a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions
-provided by the bot. You will only need to do this once across all repos using our CLA.
+```csharp
+public static void OutputBindingRun(
+   [TimerTrigger("*/5 * * * * *")] TimerInfo myTimer,
+   [CosmosDBMongo(ItemDb, ItemCollection, ConnectionStringSetting = connStr)] out TestClass newItem,
+   ILogger log)
+{
+    newItem = new TestClass()
+    {
+        id = Guid.NewGuid().ToString(),
+        SomeData = "some random data"
+    };
+}
+```
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
-For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
-contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+### Input Binding
 
-## Trademarks
+You can get the documents from a collection with query
 
-This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft 
-trademarks or logos is subject to and must follow 
-[Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
-Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
-Any use of third-party trademarks or logos are subject to those third-party's policies.
+```csharp
+public static void InputBindingRun(
+    [TimerTrigger("*/5 * * * * *")] TimerInfo myTimer,
+    [CosmosDBMongo(db, col, ConnectionStringSetting = connStr,
+    QueryString = query)] List<BsonDocument> docs,
+    ILogger log)
+{
+    foreach (var doc in docs)
+    {
+        log.LogInformation(doc.ToString());
+    }
+}
+```
+
+### Triggers
+
+The trigger sets up a [change stream pipeline](https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/change-streams?tabs=javascript%2CInsert) to monitor changes on a certain collection. Here is an example
+
+
+```csharp
+public static void TriggerRun(
+   [CosmosDBMongoTrigger(db, col, ConnectionStringSetting = connStr)] ChangeStreamDocument<BsonDocument> doc,
+   ILogger log)
+{
+    log.LogInformation(doc.FullDocument.ToString());
+}
+```
+
+## Private Preview
+
+Until the extension becomes available in the portal and extension bundles, it can be used by directly installing the extension. Use the example project for [C#](Sample) and modify it for your purpose.
