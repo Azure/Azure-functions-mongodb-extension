@@ -14,20 +14,34 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
     public class CosmosDBMongoTriggerListener : IListener
     {
         private readonly ITriggeredFunctionExecutor _executor;
-        private readonly CosmosDBMongoTriggerContext _context;
+        private readonly MongoCollectionReference _reference;
         private readonly ILogger _logger;
         private IMongoDatabase _database;
         private IMongoCollection<BsonDocument> _collection;
         private MonitorLevel _triggerLevel;
         private IChangeStreamCursor<ChangeStreamDocument<BsonDocument>> _cursor;
         private CancellationTokenSource _cancellationTokenSource;
+        private bool _disposed = false;
 
-        public CosmosDBMongoTriggerListener(ITriggeredFunctionExecutor executor, CosmosDBMongoTriggerContext context, ILogger logger)
+        public CosmosDBMongoTriggerListener(ITriggeredFunctionExecutor executor, MongoCollectionReference reference, ILogger logger)
         {
             this._executor = executor ?? throw new ArgumentNullException(nameof(executor));
-            this._context = context ?? throw new ArgumentNullException(nameof(context));
+            this._reference = reference;
             this._logger = logger;
             this._cancellationTokenSource = new CancellationTokenSource();
+
+            if (string.IsNullOrEmpty(this._reference.databaseName))
+            {
+                this._triggerLevel = MonitorLevel.Cluster;
+            }
+            else if (string.IsNullOrEmpty(this._reference.collectionName))
+            {
+                this._triggerLevel = MonitorLevel.Database;
+            }
+            else
+            {
+                this._triggerLevel = MonitorLevel.Collection;
+            }
         }
 
         public void Cancel()
@@ -37,12 +51,25 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 
         public void Dispose()
         {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    _cancellationTokenSource?.Dispose();
+                    _cursor?.Dispose();
+                }
+                _disposed = true;
+            }
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            this._triggerLevel = this._context.ResolvedAttribute.TriggerLevel;
-
             try
             {
                 var pipeline = new EmptyPipelineDefinition<ChangeStreamDocument<BsonDocument>>()
@@ -54,22 +81,22 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 
                 var changeStreamOption = new ChangeStreamOptions
                     {
-                        FullDocument = ChangeStreamFullDocumentOption.UpdateLookup
+                        FullDocument = ChangeStreamFullDocumentOption.UpdateLookup,
                     };
                 switch (this._triggerLevel)
                 {
                     case MonitorLevel.Cluster:
-                        this._cursor = await this._context.MongoClient.WatchAsync(
+                        this._cursor = await this._reference.client.WatchAsync(
                             pipeline, changeStreamOption, cancellationToken);
                         break;
                     case MonitorLevel.Database:
-                        this._database = this._context.MongoClient.GetDatabase(this._context.ResolvedAttribute.DatabaseName);
+                        this._database = this._reference.client.GetDatabase(this._reference.databaseName);
                         this._cursor = await this._database.WatchAsync(
                             pipeline, changeStreamOption, cancellationToken);
                         break;
                     case MonitorLevel.Collection:
-                        this._database = this._context.MongoClient.GetDatabase(this._context.ResolvedAttribute.DatabaseName);
-                        this._collection = this._database.GetCollection<BsonDocument>(this._context.ResolvedAttribute.CollectionName);
+                        this._database = this._reference.client.GetDatabase(this._reference.databaseName);
+                        this._collection = this._database.GetCollection<BsonDocument>(this._reference.collectionName);
                         this._cursor = await this._collection.WatchAsync(
                             pipeline, changeStreamOption, cancellationToken);
                         break;
@@ -84,7 +111,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                         while (await this._cursor.MoveNextAsync(this._cancellationTokenSource.Token))
                         {
                             var batch = this._cursor.Current;
-                            await ProcessBatchAsync(batch);
+                            if (batch.Any())
+                            {
+                                await ProcessBatchAsync(batch);
+                            }
                         }
                     }
                 }, this._cancellationTokenSource.Token);
@@ -97,7 +127,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             }
         }
 
-        public async Task StopAsync(CancellationToken cancellationToken)
+        public Task StopAsync(CancellationToken cancellationToken)
         {
             try
             {
@@ -108,6 +138,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             {
                 this._logger.LogError(Events.OnListenerStopError, $"Stopping the listener failed. Exception: {ex.Message}");
             }
+            return Task.CompletedTask;
         }
 
         private async Task ProcessBatchAsync(IEnumerable<ChangeStreamDocument<BsonDocument>> batch)
@@ -115,7 +146,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             try
             {
                 var metrics = new CosmosDBMongoTriggerMetrics(batch.Count());
-                CosmosDBMongoMetricsStore.AddMetrics(_context.ResolvedAttribute.FunctionId, _context.ResolvedAttribute.DatabaseName, _context.ResolvedAttribute.CollectionName, metrics);
+                CosmosDBMongoMetricsStore.AddMetrics(_reference.functionId, _reference.databaseName, _reference.collectionName, metrics);
 
                 var tasks = batch.Select(async change =>
                 {
@@ -125,13 +156,17 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                         {
                             TriggerValue = change
                         };
-                        await this._executor.TryExecuteAsync(triggerData, this._cancellationTokenSource.Token);
+                        var result = await this._executor.TryExecuteAsync(triggerData, this._cancellationTokenSource.Token);
+                        if (!result.Succeeded)
+                        {
+                            _logger.LogWarning($"Function execution failed for document {change.DocumentKey}: {result.Exception}");
+                        }
                     }
                     finally
                     {
                         metrics.DecrementPendingCount();
                     }
-                });
+                }).ToList();
 
                 await Task.WhenAll(tasks);
             }

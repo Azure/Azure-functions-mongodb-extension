@@ -16,8 +16,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 
         public IAsyncCollector<T> Convert(CosmosDBMongoAttribute attribute)
         {
-            CosmosDBMongoContext context = this._configProvider.CreateContext(attribute);
-            return new CosmosDBMongoBindingAsyncCollector<T>(context, this._logger);
+            return new CosmosDBMongoBindingAsyncCollector<T>(attribute, this._configProvider.ResolveCollectionReference(attribute), this._logger);
         }
     }
 }

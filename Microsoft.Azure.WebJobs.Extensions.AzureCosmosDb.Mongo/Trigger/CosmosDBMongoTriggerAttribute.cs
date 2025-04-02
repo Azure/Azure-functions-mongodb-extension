@@ -80,7 +80,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 
     public class CosmosDBMongoTriggerContext
     {
-        public MongoClient MongoClient { get; set; }
+        public IMongoClient MongoClient { get; set; }
 
         public CosmosDBMongoTriggerAttribute ResolvedAttribute { get; set; }
     }

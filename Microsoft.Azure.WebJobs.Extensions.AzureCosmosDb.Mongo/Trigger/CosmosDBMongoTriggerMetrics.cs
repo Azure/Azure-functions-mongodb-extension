@@ -1,9 +1,5 @@
 using Microsoft.Azure.WebJobs.Host.Scale;
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Collections.Concurrent;
-using System.Linq;
 using System.Threading;
 
 namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
