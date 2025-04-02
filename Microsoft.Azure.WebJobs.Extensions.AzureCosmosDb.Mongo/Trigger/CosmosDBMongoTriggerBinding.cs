@@ -7,18 +7,21 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 {
     internal class CosmosDBMongoTriggerBinding : ITriggerBinding
     {
-        private readonly CosmosDBMongoTriggerContext _triggerContext;
+        private readonly ParameterInfo _parameter;
+        private readonly MongoCollectionReference _monitoredCollectionRef;
         private readonly ILogger _logger;
 
-        public CosmosDBMongoTriggerBinding(CosmosDBMongoTriggerContext context, ILogger logger)
+        public CosmosDBMongoTriggerBinding(ParameterInfo parameter, MongoCollectionReference monitoredCollectionRef, ILogger logger)
         {
-            this._triggerContext = context ?? throw new ArgumentNullException(nameof(context));
+            this._parameter = parameter;
+            this._monitoredCollectionRef = monitoredCollectionRef;
             this._logger = logger;
         }
 
@@ -29,21 +32,21 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             { "CosmosDBMongoTrigger", typeof(ChangeStreamDocument<BsonDocument>) }
         };
 
-        public async Task<ITriggerData> BindAsync(object value, ValueBindingContext context)
+        public Task<ITriggerData> BindAsync(object value, ValueBindingContext context)
         {
             var valueProvider = new CosmosDBMongoValueProvider(value);
             var bindingData = new Dictionary<string, object>
             {
                 { "CosmosDBMongoTrigger", value }
             };
-            return new TriggerData(valueProvider, bindingData);
+            return Task.FromResult<ITriggerData>(new TriggerData(valueProvider, bindingData));
         }
 
         public Task<IListener> CreateListenerAsync(ListenerFactoryContext context)
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             return Task.FromResult<IListener>(
-                new CosmosDBMongoTriggerListener(context.Executor, this._triggerContext, this._logger));
+                new CosmosDBMongoTriggerListener(context.Executor, this._monitoredCollectionRef, this._logger));
         }
 
         public ParameterDescriptor ToParameterDescriptor()

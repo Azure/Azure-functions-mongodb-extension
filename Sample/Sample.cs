@@ -11,27 +11,41 @@ namespace Sample
 {
     public static class Sample
     {
+        [FunctionName("ClientBindingSample")]
+        public static void ClientBindingRun(
+          [TimerTrigger("*/5 * * * * *")] TimerInfo myTimer,
+          [CosmosDBMongo] MongoClient client,
+          ILogger log)
+        {
+           var documents = client.GetDatabase("%vCoreDatabaseBinding%").GetCollection<BsonDocument>("%vCoreCollectionBinding%").Find(new BsonDocument()).ToList();
+
+           foreach (BsonDocument d in documents)
+           {
+               log.LogInformation(d.ToString());
+           }
+        }
+
         [FunctionName("OutputBindingSample")]
         public static async Task OutputBindingRun(
-           [TimerTrigger("*/5 * * * * *")] TimerInfo myTimer,
-           [CosmosDBMongo("%vCoreDatabaseBinding%", "%vCoreCollectionBinding%", ConnectionStringSetting = "vCoreConnectionStringBinding")] IAsyncCollector<TestClass> CosmosDBMongoCollector,
-           ILogger log)
+          [TimerTrigger("*/5 * * * * *")] TimerInfo myTimer,
+          [CosmosDBMongo("%vCoreDatabaseBinding%", "%vCoreCollectionBinding%")] IAsyncCollector<TestClass> CosmosDBMongoCollector,
+          ILogger log)
         {
-            log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
+           log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
 
-            TestClass item = new TestClass()
-            {
-                id = Guid.NewGuid().ToString(),
-                SomeData = "some random data"
-            };
+           TestClass item = new TestClass()
+           {
+               id = Guid.NewGuid().ToString(),
+               SomeData = "some random data"
+           };
 
-            await CosmosDBMongoCollector.AddAsync(item);
+           await CosmosDBMongoCollector.AddAsync(item);
         }
 
 
         [FunctionName("TriggerSample")]
         public static void TriggerRun(
-           [CosmosDBMongoTrigger("vCoreDatabaseTrigger", "vCoreCollectionTrigger", ConnectionStringSetting = "vCoreConnectionStringTrigger")] ChangeStreamDocument<BsonDocument> doc,
+           [CosmosDBMongoTrigger("TestDatabase", "TestCollection")] ChangeStreamDocument<BsonDocument> doc,
            ILogger log)
         {
             log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
@@ -40,18 +54,17 @@ namespace Sample
         }
 
         [FunctionName("InputBindingSample")]
-        public static async Task InputBindingRun(
-            [TimerTrigger("*/5 * * * * *")] TimerInfo myTimer,
-            [CosmosDBMongo("%vCoreDatabaseTrigger%", "%vCoreCollectionTrigger%", ConnectionStringSetting = "vCoreConnectionStringTrigger",
-            QueryString = "%queryString%")] List<BsonDocument> docs,
-            ILogger log)
+        public static void InputBindingRun(
+           [TimerTrigger("*/5 * * * * *")] TimerInfo myTimer,
+           [CosmosDBMongo("%vCoreDatabaseTrigger%", "%vCoreCollectionTrigger%", QueryString = "%queryString%")] List<BsonDocument> docs,
+           ILogger log)
         {
-            log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
+           log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
 
-            foreach (var doc in docs)
-            {
-                log.LogInformation(doc.ToString());
-            }
+           foreach (var doc in docs)
+           {
+               log.LogInformation(doc.ToString());
+           }
         }
     }
 

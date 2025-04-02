@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Azure.WebJobs.Host.Scale;
 using System;
+using System.Linq;
 
 namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 {
@@ -22,14 +23,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 
         public static IWebJobsBuilder AddCosmosDBMongoScaleForTrigger(this IWebJobsBuilder builder, TriggerMetadata triggerMetadata)
         {
-            IServiceProvider serviceProvider = null;
-            Lazy<CosmosDBMongoScalerProvider> scalerProvider = new Lazy<CosmosDBMongoScalerProvider>(() => new CosmosDBMongoScalerProvider(serviceProvider, triggerMetadata));
-
-            builder.Services.AddSingleton<IScaleMonitorProvider>(resolvedServiceProvider =>
+            // We need to register an instance of ServiceBusScalerProvider in the DI container and then map it to the interfaces IScaleMonitorProvider and ITargetScalerProvider.
+            // Since there can be more than one instance of ServiceBusScalerProvider, we have to store a reference to the created instance to filter it out later.
+            CosmosDBMongoScalerProvider cosmosDBMongoScalerProvider = null;
+            builder.Services.AddSingleton(serviceProvider =>
             {
-                serviceProvider = serviceProvider ?? resolvedServiceProvider;
-                return scalerProvider.Value;
+                cosmosDBMongoScalerProvider = new CosmosDBMongoScalerProvider(serviceProvider, triggerMetadata);
+                return cosmosDBMongoScalerProvider;
             });
+            builder.Services.AddSingleton<IScaleMonitorProvider>(serviceProvider => serviceProvider.GetServices<CosmosDBMongoScalerProvider>().Single(x => x == cosmosDBMongoScalerProvider));
+            builder.Services.AddSingleton<ITargetScalerProvider>(serviceProvider => serviceProvider.GetServices<CosmosDBMongoScalerProvider>().Single(x => x == cosmosDBMongoScalerProvider));
 
             return builder;
         }

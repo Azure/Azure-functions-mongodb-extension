@@ -7,6 +7,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 {
     public static class CosmosDBMongoConstant
     {
+        public const string DefaultConnectionStringKey = "CosmosDBMongo";
         internal const string AzureFunctionApplicationName = "AzureCosmosDBMongoExtension";
         internal const string AzureFunctionTelemetryCategory = "CosmosDBMongo";
 

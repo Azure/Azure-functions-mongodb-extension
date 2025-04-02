@@ -39,6 +39,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         }
 
         /// <summary>
+        /// Constructs a new instance.
+        /// </summary>
+        /// <param name="databaseName">The vcore database name.</param>
+        public CosmosDBMongoAttribute(string databaseName)
+        {
+            DatabaseName = databaseName;
+        }
+
+        /// <summary>
         /// The id of binding function.
         /// </summary>
         public string functionId { get; set; } = string.Empty;
@@ -68,7 +77,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         /// <summary>
         /// A string value indicating the app setting to use as the CosmosDB connection string.
         /// </summary>
-        [ConnectionString]
+        [AutoResolve]
         public string ConnectionStringSetting { get; set; }
 
         /// <summary>
@@ -81,7 +90,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 
     public class CosmosDBMongoContext
     {
-        public MongoClient MongoClient { get; set; }
+        public IMongoClient MongoClient { get; set; }
 
         public CosmosDBMongoAttribute ResolvedAttribute { get; set; }
     }

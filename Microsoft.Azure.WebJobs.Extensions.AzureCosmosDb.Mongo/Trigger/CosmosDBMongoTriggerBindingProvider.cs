@@ -29,14 +29,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             
             var attribute = context.Parameter.GetCustomAttribute<CosmosDBMongoTriggerAttribute>(inherit: false);
             if (attribute == null)
+            {
                 return Task.FromResult<ITriggerBinding>(null);
-            attribute.ConnectionStringSetting = ResolveAttributeValue(attribute.ConnectionStringSetting);
-            attribute.CollectionName = ResolveAttributeValue(attribute.CollectionName);
-            attribute.DatabaseName = ResolveAttributeValue(attribute.DatabaseName);
+            }
+            string connectionString = _configProvider.ResolveConnectionString(attribute.ConnectionStringSetting);
 
-            CosmosDBMongoTriggerContext triggerContext = this._configProvider.CreateTriggerContext(attribute);
             return
-                Task.FromResult<ITriggerBinding>(new CosmosDBMongoTriggerBinding(triggerContext, this._logger));
+                Task.FromResult<ITriggerBinding>(new CosmosDBMongoTriggerBinding(context.Parameter,
+                    new MongoCollectionReference(
+                        _configProvider.GetService(connectionString),
+                        ResolveAttributeValue(attribute.DatabaseName),
+                        ResolveAttributeValue(attribute.CollectionName)),
+                    this._logger));
         }
 
         private string ResolveAttributeValue(string value)

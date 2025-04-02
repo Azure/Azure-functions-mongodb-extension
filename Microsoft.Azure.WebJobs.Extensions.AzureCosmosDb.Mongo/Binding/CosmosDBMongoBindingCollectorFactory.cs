@@ -5,7 +5,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 {
     public class CosmosDBMongoBindingCollectorFactory : ICosmosDBMongoBindingCollectorFactory
     {
-        public MongoClient CreateClient(string connectionString)
+        public IMongoClient CreateClient(string connectionString)
         {
             if (string.IsNullOrEmpty(connectionString))
             {
