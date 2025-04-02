@@ -6,11 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="C:\.tools\.nuget\packages\microsoft.azure.webjobs.host.testcommon\3.0.41\contentFiles\any\netcoreapp3.1\testhost.dll" />
-    <Content Remove="C:\.tools\.nuget\packages\microsoft.azure.webjobs.host.testcommon\3.0.41\contentFiles\any\netcoreapp3.1\testhost.exe" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.Azure.WebJobs" Version="3.0.41" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Core" Version="3.0.41" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.Storage" Version="5.3.4" />
