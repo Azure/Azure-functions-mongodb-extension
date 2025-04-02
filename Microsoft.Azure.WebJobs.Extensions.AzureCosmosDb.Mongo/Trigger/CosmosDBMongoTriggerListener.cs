@@ -145,8 +145,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         {
             try
             {
-                var metrics = new CosmosDBMongoTriggerMetrics(batch.Count());
-                CosmosDBMongoMetricsStore.AddMetrics(_reference.functionId, _reference.databaseName, _reference.collectionName, metrics);
+                // var metrics = new CosmosDBMongoTriggerMetrics(batch.Count());
+                // CosmosDBMongoMetricsStore.AddMetrics(_reference.functionId, _reference.databaseName, _reference.collectionName, metrics);
 
                 var tasks = batch.Select(async change =>
                 {
@@ -164,7 +164,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                     }
                     finally
                     {
-                        metrics.DecrementPendingCount();
+                        // metrics.DecrementPendingCount();
                     }
                 }).ToList();
 
