@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 
 namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 {
@@ -22,6 +23,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         private IChangeStreamCursor<ChangeStreamDocument<BsonDocument>> _cursor;
         private CancellationTokenSource _cancellationTokenSource;
         private bool _disposed = false;
+        private ActionBlock<ChangeStreamDocument<BsonDocument>> _workerPool;
+        private const int MaxConcurrency = 32; // Maximum number of concurrent workers
+        private CosmosDBMongoTriggerMetrics _currentMetrics;
+        private readonly object _metricsLock = new object();
 
         public CosmosDBMongoTriggerListener(ITriggeredFunctionExecutor executor, MongoCollectionReference reference, ILogger logger)
         {
@@ -29,6 +34,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             this._reference = reference;
             this._logger = logger;
             this._cancellationTokenSource = new CancellationTokenSource();
+            this._currentMetrics = new CosmosDBMongoTriggerMetrics();
+
+            // Initialize the worker pool
+            var executionDataflowBlockOptions = new ExecutionDataflowBlockOptions
+            {
+                MaxDegreeOfParallelism = MaxConcurrency,
+                CancellationToken = this._cancellationTokenSource.Token
+            };
+
+            this._workerPool = new ActionBlock<ChangeStreamDocument<BsonDocument>>(
+                async document => await ProcessChangeAsync(document),
+                executionDataflowBlockOptions);
 
             if (string.IsNullOrEmpty(this._reference.databaseName))
             {
@@ -63,6 +80,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                 {
                     _cancellationTokenSource?.Dispose();
                     _cursor?.Dispose();
+                    _workerPool?.Complete();
                 }
                 _disposed = true;
             }
@@ -111,9 +129,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                         while (await this._cursor.MoveNextAsync(this._cancellationTokenSource.Token))
                         {
                             var batch = this._cursor.Current;
-                            if (batch.Any())
+                            foreach (var change in batch)
                             {
-                                await ProcessBatchAsync(batch);
+                                await _workerPool.SendAsync(change, this._cancellationTokenSource.Token);
                             }
                         }
                     }
@@ -127,10 +145,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             }
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
             try
             {
+                _workerPool.Complete();
+                await _workerPool.Completion;
                 this._cursor.Dispose();
                 this._logger.LogDebug(Events.OnListenerStopped, "MongoDB trigger listener stopped.");
             }
@@ -138,41 +158,42 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             {
                 this._logger.LogError(Events.OnListenerStopError, $"Stopping the listener failed. Exception: {ex.Message}");
             }
-            return Task.CompletedTask;
         }
 
-        private async Task ProcessBatchAsync(IEnumerable<ChangeStreamDocument<BsonDocument>> batch)
+        private async Task ProcessChangeAsync(ChangeStreamDocument<BsonDocument> change)
         {
             try
             {
-                var metrics = new CosmosDBMongoTriggerMetrics(batch.Count());
-                CosmosDBMongoMetricsStore.AddMetrics(_reference.functionId, _reference.databaseName, _reference.collectionName, metrics);
-
-                var tasks = batch.Select(async change =>
+                lock (_metricsLock)
                 {
-                    try
-                    {
-                        var triggerData = new TriggeredFunctionData
-                        {
-                            TriggerValue = change
-                        };
-                        var result = await this._executor.TryExecuteAsync(triggerData, this._cancellationTokenSource.Token);
-                        if (!result.Succeeded)
-                        {
-                            _logger.LogWarning($"Function execution failed for document {change.DocumentKey}: {result.Exception}");
-                        }
-                    }
-                    finally
-                    {
-                        metrics.DecrementPendingCount();
-                    }
-                }).ToList();
+                    _currentMetrics.PendingEventsCount++;
+                    CosmosDBMongoMetricsStore.AddMetrics(_reference.functionId, _reference.databaseName, _reference.collectionName, _currentMetrics);
+                }
 
-                await Task.WhenAll(tasks);
+                try
+                {
+                    var triggerData = new TriggeredFunctionData
+                    {
+                        TriggerValue = change
+                    };
+                    var result = await this._executor.TryExecuteAsync(triggerData, this._cancellationTokenSource.Token);
+                    if (!result.Succeeded)
+                    {
+                        _logger.LogWarning($"Function execution failed for document {change.DocumentKey}: {result.Exception}");
+                    }
+                }
+                finally
+                {
+                    lock (_metricsLock)
+                    {
+                        _currentMetrics.PendingEventsCount--;
+                        CosmosDBMongoMetricsStore.AddMetrics(_reference.functionId, _reference.databaseName, _reference.collectionName, _currentMetrics);
+                    }
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(Events.OnError, $"Error processing batch of changes. Exception: {ex.Message}");
+                _logger.LogError(Events.OnError, $"Error processing change. Exception: {ex.Message}");
                 throw;
             }
         }

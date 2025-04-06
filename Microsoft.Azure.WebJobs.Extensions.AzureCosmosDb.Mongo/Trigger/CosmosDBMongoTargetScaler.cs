@@ -1,4 +1,5 @@
 using Microsoft.Azure.WebJobs.Host.Scale;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Globalization;
@@ -15,20 +16,25 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         private readonly TargetScalerDescriptor _targetScalerDescriptor;
         private readonly ILogger _logger;
 
-        private int _defaultMaxWorkPerInstance = 1000;
+        private int _maxWorkPerInstance;
+        private int _maxWorkInstance;
 
         public CosmosDBMongoTargetScaler(
-            string functionId,
+            string functionName,
             string databaseName,
             string collectionName,
-            ILoggerFactory loggerFactory
+            ILoggerFactory loggerFactory,
+            int maxWorkPerInstance = 1000,
+            int maxWorkInstance = 3
             )
         {
-            this._functionId = functionId;
+            this._functionId = functionName;
             this._databaseName = databaseName;
             this._collectionName = collectionName;
             this._cosmosDBMongoMetricsProvider = new CosmosDBMongoMetricsProvider(this._functionId, this._databaseName, this._collectionName, loggerFactory);
-            this._targetScalerDescriptor = new TargetScalerDescriptor(functionId);
+            this._targetScalerDescriptor = new TargetScalerDescriptor(_functionId);
+            this._maxWorkPerInstance = maxWorkPerInstance;
+            this._maxWorkInstance = maxWorkInstance;
             this._logger = loggerFactory.CreateLogger<CosmosDBMongoTargetScaler>();
         }
 
@@ -38,8 +44,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         {
             try
             {
-                long pendingWorkCount = await _cosmosDBMongoMetricsProvider.GetLatestPendingWorkCountAsync().ConfigureAwait(false);
-                return GetScaleResultInternal(context, pendingWorkCount);
+                CosmosDBMongoTriggerMetrics metrics = await _cosmosDBMongoMetricsProvider.GetMetricsAsync();
+                return GetScaleResultInternal(context, metrics.PendingEventsCount);
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -50,20 +56,29 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 
         internal TargetScalerResult GetScaleResultInternal(TargetScalerContext context, long pendingWorkCount)
         {
-            int concurrency = context.InstanceConcurrency.Value;
+            int concurrency;
+
+            if (!context.InstanceConcurrency.HasValue)
+            {
+                concurrency = _maxWorkPerInstance;
+            }
+            else
+            {
+                concurrency = context.InstanceConcurrency.Value;
+            }
 
             if (concurrency < 1)
             {
                 throw new ArgumentOutOfRangeException($"Unexpected concurrency='{concurrency}' - the value must be > 0.");
             }
 
-            int targetWorkerCount;
+            int targetWorkerCount = 1;
 
             try
             {
                 checked
                 {
-                    targetWorkerCount = (int)Math.Ceiling(pendingWorkCount / (decimal)_defaultMaxWorkPerInstance);
+                    targetWorkerCount = (int)Math.Ceiling(pendingWorkCount / (decimal)_maxWorkPerInstance);
                 }
             }
             catch (OverflowException)
@@ -71,11 +86,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                 targetWorkerCount = int.MaxValue;
             }
 
-            _logger.LogInformation($"Target worker count for function '{_functionId}-{_databaseName}-{_collectionName}' is '{targetWorkerCount}' Concurrency='{concurrency}').");
+            _logger.LogDebug($"Target worker count for function '{_functionId}-{_databaseName}-{_collectionName}' is '{targetWorkerCount}' Concurrency='{concurrency}').");
 
             return new TargetScalerResult
             {
-                TargetWorkerCount = targetWorkerCount
+                TargetWorkerCount = targetWorkerCount > _maxWorkInstance ? _maxWorkInstance : targetWorkerCount,
             };
         }
     }

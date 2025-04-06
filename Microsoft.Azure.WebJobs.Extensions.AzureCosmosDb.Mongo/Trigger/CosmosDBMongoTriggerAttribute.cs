@@ -43,7 +43,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         }
 
         /// <summary>
-        /// The id of trigger function.
+        /// The Id of trigger function.
         /// </summary>
         public string FunctionId { get; set; } = string.Empty;
 

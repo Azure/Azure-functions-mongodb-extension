@@ -10,8 +10,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         public const string DefaultConnectionStringKey = "CosmosDBMongo";
         internal const string AzureFunctionApplicationName = "AzureCosmosDBMongoExtension";
         internal const string AzureFunctionTelemetryCategory = "CosmosDBMongo";
-
-        internal const int NumberOfSamplesToConsiderForScaling = 5;
     }
 
     internal static class Events

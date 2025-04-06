@@ -21,15 +21,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 
         public Task<CosmosDBMongoTriggerMetrics> GetMetricsAsync()
         {
-            var metrics = CosmosDBMongoMetricsStore.GetMetrics(_functionId, _databaseName, _collectionName);
-            _logger.LogDebug($"Retrieved metrics with pending count: {metrics.PendingEventsCount} for function {_functionId}");
-            return Task.FromResult(metrics);
+            var metricsHistory = CosmosDBMongoMetricsStore.GetMetricsHistory(_functionId, _databaseName, _collectionName);
+            var latestMetrics = metricsHistory.Length > 0
+                ? metricsHistory[metricsHistory.Length - 1]
+                : CosmosDBMongoMetricsStore.GetMetrics(_functionId, _databaseName, _collectionName);
+
+            _logger.LogDebug($"Retrieved latest metrics with pending count: {latestMetrics.PendingEventsCount} for function {_functionId}");
+            return Task.FromResult(latestMetrics);
         }
 
         public Task<CosmosDBMongoTriggerMetrics[]> GetMetricsHistoryAsync()
         {
             var metricsHistory = CosmosDBMongoMetricsStore.GetMetricsHistory(_functionId, _databaseName, _collectionName);
-            _logger.LogDebug($"Retrieved metrics history with {metricsHistory.Length} samples for function {_functionId}");
             return Task.FromResult(metricsHistory);
         }
 
