@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+     <WarningsAsErrors></WarningsAsErrors>
+	  <DefaultItemExcludes>**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../src/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.csproj" />
+  </ItemGroup>
+
+</Project>

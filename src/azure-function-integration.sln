@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35431.28
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo", "Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo\Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.csproj", "{7333C9C7-F0A5-41FF-8203-5796CF73D7C6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample", "Sample\Sample.csproj", "{DF4D3DEF-59FA-4907-AED3-CB8D19E6B627}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Tests", "Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Tests\Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Tests.csproj", "{07B56C16-8F68-2852-C904-2C78CF811FFC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7333C9C7-F0A5-41FF-8203-5796CF73D7C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7333C9C7-F0A5-41FF-8203-5796CF73D7C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7333C9C7-F0A5-41FF-8203-5796CF73D7C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7333C9C7-F0A5-41FF-8203-5796CF73D7C6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF4D3DEF-59FA-4907-AED3-CB8D19E6B627}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF4D3DEF-59FA-4907-AED3-CB8D19E6B627}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF4D3DEF-59FA-4907-AED3-CB8D19E6B627}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF4D3DEF-59FA-4907-AED3-CB8D19E6B627}.Release|Any CPU.Build.0 = Release|Any CPU
+		{07B56C16-8F68-2852-C904-2C78CF811FFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{07B56C16-8F68-2852-C904-2C78CF811FFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{07B56C16-8F68-2852-C904-2C78CF811FFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{07B56C16-8F68-2852-C904-2C78CF811FFC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0B46E75E-9A8A-46E4-85D4-C7F3AE8E767C}
+	EndGlobalSection
+EndGlobal
