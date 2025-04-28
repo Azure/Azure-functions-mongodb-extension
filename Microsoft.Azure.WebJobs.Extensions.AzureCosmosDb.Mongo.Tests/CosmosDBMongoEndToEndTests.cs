@@ -19,7 +19,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Tests
     {
         private const string DatabaseName = "TestDatabase";
         private const string CollectionName = "TestCollection";
-        private string ConnectionString = Environment.GetEnvironmentVariable("CosmosDBMongo")!;
+        private string ConnectionString = Environment.GetEnvironmentVariable("CosmosDBMongoReal")!;
         private readonly TestLoggerProvider _loggerProvider = new TestLoggerProvider();
 
         [TestInitialize]
@@ -137,7 +137,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Tests
         public class TestFunctions
         {
             public static void Trigger(
-                [CosmosDBMongoTrigger(DatabaseName, CollectionName)] ChangeStreamDocument<BsonDocument> doc,
+                [CosmosDBMongoTrigger(DatabaseName, CollectionName, ConnectionStringSetting = "CosmosDBMongoReal")] ChangeStreamDocument<BsonDocument> doc,
                 ILogger logger)
             {
                 logger.LogInformation(DateTime.Now.ToString());

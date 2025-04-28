@@ -42,10 +42,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             CollectionName = collectionName;
         }
 
-        // /// <summary>
-        // /// The id of trigger function.
-        // /// </summary>
-        // public string FunctionId { get; set; } = string.Empty;
+        /// <summary>
+        /// The Id of trigger function.
+        /// </summary>
+        public string FunctionId { get; set; } = string.Empty;
 
         /// <summary>
         /// The name of the database to which the parameter applies.

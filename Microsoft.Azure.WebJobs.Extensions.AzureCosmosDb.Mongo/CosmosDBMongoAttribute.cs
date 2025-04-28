@@ -47,10 +47,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             DatabaseName = databaseName;
         }
 
-        // /// <summary>
-        // /// The id of binding function.
-        // /// </summary>
-        // public string functionId { get; set; } = string.Empty;
+        /// <summary>
+        /// The Id of binding function.
+        /// </summary>
+        public string FunctionId { get; set; } = string.Empty;
 
         /// <summary>
         /// The name of the database to which the parameter applies.

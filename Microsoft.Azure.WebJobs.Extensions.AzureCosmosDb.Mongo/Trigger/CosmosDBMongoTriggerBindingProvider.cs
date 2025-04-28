@@ -33,13 +33,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                 return Task.FromResult<ITriggerBinding>(null);
             }
             string connectionString = _configProvider.ResolveConnectionString(attribute.ConnectionStringSetting);
-
-            return
-                Task.FromResult<ITriggerBinding>(new CosmosDBMongoTriggerBinding(context.Parameter,
-                    new MongoCollectionReference(
+            string functionId = context.Parameter.Member.Name;
+            var reference = new MongoCollectionReference(
                         _configProvider.GetService(connectionString),
                         ResolveAttributeValue(attribute.DatabaseName),
-                        ResolveAttributeValue(attribute.CollectionName)),
+                        ResolveAttributeValue(attribute.CollectionName));
+            reference.functionId = functionId;
+            return
+                Task.FromResult<ITriggerBinding>(new CosmosDBMongoTriggerBinding(context.Parameter,
+                    reference,
                     this._logger));
         }
 
