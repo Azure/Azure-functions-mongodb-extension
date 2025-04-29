@@ -1,5 +1,6 @@
-﻿using Amazon.Util.Internal;
-using Microsoft.Azure.WebJobs.Host;
+﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See License.txt in the project root for license information.
+
 using Microsoft.Azure.WebJobs.Host.Triggers;
 using Microsoft.Azure.WebJobs.Logging;
 using Microsoft.Extensions.Logging;
