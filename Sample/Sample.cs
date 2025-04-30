@@ -16,16 +16,16 @@ namespace Sample
     {
         [FunctionName("ClientBindingSample")]
         public static void ClientBindingRun(
-         [TimerTrigger("*/5 * * * * *")] TimerInfo myTimer,
-         [CosmosDBMongo] MongoClient client,
-         ILogger log)
+             [TimerTrigger("*/5 * * * * *")] TimerInfo myTimer,
+             [CosmosDBMongo] IMongoClient client,
+             ILogger log)
         {
-          var documents = client.GetDatabase("%vCoreDatabaseBinding%").GetCollection<BsonDocument>("%vCoreCollectionBinding%").Find(new BsonDocument()).ToList();
+            var documents = client.GetDatabase("TestDatabase").GetCollection<BsonDocument>("TestCollection").Find(new BsonDocument()).ToList();
 
-          foreach (BsonDocument d in documents)
-          {
-              log.LogInformation(d.ToString());
-          }
+            foreach (BsonDocument d in documents)
+            {
+                log.LogInformation(d.ToString());
+            }
         }
 
         [FunctionName("OutputBindingSample")]
@@ -34,15 +34,15 @@ namespace Sample
          [CosmosDBMongo("%vCoreDatabaseBinding%", "%vCoreCollectionBinding%")] IAsyncCollector<TestClass> CosmosDBMongoCollector,
          ILogger log)
         {
-          log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
+            log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
 
-          TestClass item = new TestClass()
-          {
-              id = Guid.NewGuid().ToString(),
-              SomeData = "some random data"
-          };
+            TestClass item = new TestClass()
+            {
+                id = Guid.NewGuid().ToString(),
+                SomeData = "some random data"
+            };
 
-          await CosmosDBMongoCollector.AddAsync(item);
+            await CosmosDBMongoCollector.AddAsync(item);
         }
 
 
@@ -51,9 +51,9 @@ namespace Sample
           [CosmosDBMongoTrigger("TestDatabase", "TestCollection")] ChangeStreamDocument<BsonDocument> doc,
           ILogger log)
         {
-           log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
+            log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
 
-           log.LogInformation(doc.FullDocument.ToString());
+            log.LogInformation(doc.FullDocument.ToString());
         }
 
         [FunctionName("InputBindingSample")]
