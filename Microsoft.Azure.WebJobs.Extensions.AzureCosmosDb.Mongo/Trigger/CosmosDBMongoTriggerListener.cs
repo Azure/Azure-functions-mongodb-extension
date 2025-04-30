@@ -5,6 +5,7 @@ using Microsoft.Azure.WebJobs.Host.Executors;
 using Microsoft.Azure.WebJobs.Host.Listeners;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using System;
 using System.Threading;
@@ -21,7 +22,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         private IMongoDatabase _database;
         private IMongoCollection<BsonDocument> _collection;
         private MonitorLevel _triggerLevel;
-        private IChangeStreamCursor<ChangeStreamDocument<BsonDocument>> _cursor;
+        private IChangeStreamCursor<BsonDocument> _cursor;
         private CancellationTokenSource _cancellationTokenSource;
         private bool _disposed = false;
         private ActionBlock<ChangeStreamDocument<BsonDocument>> _workerPool;
@@ -95,8 +96,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                     .Match(change =>
                         change.OperationType == ChangeStreamOperationType.Insert ||
                         change.OperationType == ChangeStreamOperationType.Update ||
-                        change.OperationType == ChangeStreamOperationType.Replace ||
-                        change.OperationType == ChangeStreamOperationType.Delete);
+                        change.OperationType == ChangeStreamOperationType.Replace)
+                    //;
+                    .Project<ChangeStreamDocument<BsonDocument>, ChangeStreamDocument<BsonDocument>>(
+                        Builders<ChangeStreamDocument<BsonDocument>>.Projection
+                            .Include(x => x.FullDocument)
+                            .Include(x => x.DocumentKey)
+                            .Include("_id")
+                            .Include("ns")
+                    );
 
                 var changeStreamOption = new ChangeStreamOptions
                     {
@@ -122,6 +130,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                     default:
                         throw new InvalidOperationException("Unknown trigger level.");
                 }
+                IBsonSerializer<BsonDocument> documentSerializer = BsonSerializer.SerializerRegistry.GetSerializer<BsonDocument>();
 
                 _ = Task.Run(async () =>
                 {
@@ -130,8 +139,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                         while (await this._cursor.MoveNextAsync(this._cancellationTokenSource.Token))
                         {
                             var batch = this._cursor.Current;
-                            foreach (var change in batch)
+                            foreach (var bsonDoc in batch)
                             {
+                                var change = new ChangeStreamDocument<BsonDocument>(bsonDoc, documentSerializer);
                                 await _workerPool.SendAsync(change, this._cancellationTokenSource.Token);
                             }
                         }
