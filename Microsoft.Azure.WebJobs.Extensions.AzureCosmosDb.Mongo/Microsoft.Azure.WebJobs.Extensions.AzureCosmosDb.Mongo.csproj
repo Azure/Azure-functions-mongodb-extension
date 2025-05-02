@@ -7,6 +7,20 @@
     <Description>Azure CosmosDB Mongo extensions for .NET isolated functions</Description>
     <PackageTags>MongoDB;AzureFunctions</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Authors>Microsoft</Authors>
+    <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
+    <PackageProjectUrl>https://github.com/Azure/Azure-functions-mongodb-extension</PackageProjectUrl>
+
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>symbols.nupkg</SymbolPackageFormat>
+    <IncludeSource>true</IncludeSource>
+
+    <!-- Add strong name signing properties -->
+	  <SignAssembly>True</SignAssembly>
+	  <PublicSign>true</PublicSign>
+    <DelaySign>False</DelaySign>
+	  <AssemblyOriginatorKeyFile>MSSharedLibKey.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>
