@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo</id>
+    <version>1.1.2-preview</version>
+    <authors>Microsoft</authors>
+    <license type="expression">MIT</license>
+    <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
+    <projectUrl>https://github.com/Azure/Azure-functions-mongodb-extension</projectUrl>
+    <description>Azure CosmosDB Mongo extensions for .NET isolated functions</description>
+    <copyright>© Microsoft Corporation. All rights reserved.</copyright>
+    <tags>MongoDB AzureFunctions</tags>
+    <repository type="git" commit="06457fd2fb241563c7777c54b48f2c7084f9cc88" />
+    <dependencies>
+      <group targetFramework="net8.0">
+        <dependency id="Microsoft.Azure.WebJobs" version="3.0.41" exclude="Build,Analyzers" />
+        <dependency id="MongoDB.Bson" version="3.4.0" exclude="Build,Analyzers" />
+        <dependency id="MongoDB.Driver" version="3.4.0" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework=".NETStandard2.0">
+        <dependency id="Microsoft.Azure.WebJobs" version="3.0.41" exclude="Build,Analyzers" />
+        <dependency id="MongoDB.Bson" version="2.19.0" exclude="Build,Analyzers" />
+        <dependency id="MongoDB.Driver" version="2.19.0" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/bin/Debug/net8.0/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.pdb" target="lib/net8.0/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.pdb" />
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/bin/Debug/netstandard2.0/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.pdb" target="lib/netstandard2.0/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.pdb" />
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/bin/Debug/net8.0/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.dll" target="lib/net8.0/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.dll" />
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/bin/Debug/netstandard2.0/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.dll" target="lib/netstandard2.0/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.dll" />
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Binding/CosmosDBMongoBindingAsyncCollector.cs" target="src/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Binding/CosmosDBMongoBindingAsyncCollector.cs" />
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Binding/CosmosDBMongoBindingCollectorBuilder.cs" target="src/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Binding/CosmosDBMongoBindingCollectorBuilder.cs" />
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Binding/CosmosDBMongoBindingCollectorFactory.cs" target="src/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Binding/CosmosDBMongoBindingCollectorFactory.cs" />
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Binding/CosmosDBMongoBindingEnumerableBuilder.cs" target="src/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Binding/CosmosDBMongoBindingEnumerableBuilder.cs" />
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Binding/CosmosDBMongoBindingListBuilder.cs" target="src/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Binding/CosmosDBMongoBindingListBuilder.cs" />
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Binding/ICosmosDBMongoBindingCollectorFactory.cs" target="src/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Binding/ICosmosDBMongoBindingCollectorFactory.cs" />
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/CosmosDBMongoAttribute.cs" target="src/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/CosmosDBMongoAttribute.cs" />
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/CosmosDBMongoConfigProvider.cs" target="src/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/CosmosDBMongoConfigProvider.cs" />
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/CosmosDBMongoConstant.cs" target="src/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/CosmosDBMongoConstant.cs" />
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/CosmosDBMongoWebJobsBuilderExtensions.cs" target="src/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/CosmosDBMongoWebJobsBuilderExtensions.cs" />
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/CosmosDBMongoWebJobsStartup.cs" target="src/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/CosmosDBMongoWebJobsStartup.cs" />
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/MongoCollectionReference.cs" target="src/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/MongoCollectionReference.cs" />
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/MongoUtility.cs" target="src/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/MongoUtility.cs" />
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Trigger/CosmosDBMongoMetricsProvider.cs" target="src/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Trigger/CosmosDBMongoMetricsProvider.cs" />
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Trigger/CosmosDBMongoMetricsStore.cs" target="src/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Trigger/CosmosDBMongoMetricsStore.cs" />
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Trigger/CosmosDBMongoScaleMonitor.cs" target="src/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Trigger/CosmosDBMongoScaleMonitor.cs" />
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Trigger/CosmosDBMongoScalerProvider.cs" target="src/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Trigger/CosmosDBMongoScalerProvider.cs" />
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Trigger/CosmosDBMongoTargetScaler.cs" target="src/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Trigger/CosmosDBMongoTargetScaler.cs" />
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Trigger/CosmosDBMongoTriggerAttribute.cs" target="src/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Trigger/CosmosDBMongoTriggerAttribute.cs" />
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Trigger/CosmosDBMongoTriggerBinding.cs" target="src/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Trigger/CosmosDBMongoTriggerBinding.cs" />
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Trigger/CosmosDBMongoTriggerBindingProvider.cs" target="src/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Trigger/CosmosDBMongoTriggerBindingProvider.cs" />
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Trigger/CosmosDBMongoTriggerListener.cs" target="src/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Trigger/CosmosDBMongoTriggerListener.cs" />
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Trigger/CosmosDBMongoTriggerMetrics.cs" target="src/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Trigger/CosmosDBMongoTriggerMetrics.cs" />
+    <file src="/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.csproj" target="src/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.csproj" />
+  </files>
+</package>

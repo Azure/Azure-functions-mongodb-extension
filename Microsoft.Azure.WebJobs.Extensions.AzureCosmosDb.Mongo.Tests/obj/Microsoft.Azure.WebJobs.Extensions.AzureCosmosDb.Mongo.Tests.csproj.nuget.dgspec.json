@@ -1,0 +1,235 @@
+{
+  "format": 1,
+  "restore": {
+    "/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Tests/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Tests.csproj": {}
+  },
+  "projects": {
+    "/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Tests/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Tests.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Tests/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Tests.csproj",
+        "projectName": "Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Tests",
+        "projectPath": "/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Tests/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Tests.csproj",
+        "packagesPath": "/home/runner/.nuget/packages/",
+        "outputPath": "/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Tests/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/runner/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.csproj": {
+                "projectPath": "/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "MSTest.TestAdapter": {
+              "target": "Package",
+              "version": "[2.2.8, )"
+            },
+            "MSTest.TestFramework": {
+              "target": "Package",
+              "version": "[2.2.8, )"
+            },
+            "Microsoft.Azure.WebJobs": {
+              "target": "Package",
+              "version": "[3.0.41, )"
+            },
+            "Microsoft.Azure.WebJobs.Core": {
+              "target": "Package",
+              "version": "[3.0.41, )"
+            },
+            "Microsoft.Azure.WebJobs.Extensions.Storage": {
+              "target": "Package",
+              "version": "[5.3.4, )"
+            },
+            "Microsoft.Azure.WebJobs.Host.TestCommon": {
+              "target": "Package",
+              "version": "[3.0.41, )"
+            },
+            "Microsoft.Extensions.Azure": {
+              "target": "Package",
+              "version": "[1.10.0, )"
+            },
+            "Microsoft.Extensions.Configuration.Json": {
+              "target": "Package",
+              "version": "[6.0.0, )"
+            },
+            "Microsoft.Extensions.Hosting": {
+              "target": "Package",
+              "version": "[2.1.0, )"
+            },
+            "Microsoft.NET.Test.Sdk": {
+              "target": "Package",
+              "version": "[17.5.0, )"
+            },
+            "Moq": {
+              "target": "Package",
+              "version": "[4.20.72, )"
+            },
+            "coverlet.collector": {
+              "target": "Package",
+              "version": "[3.1.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.100/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.csproj": {
+      "version": "1.1.2-preview",
+      "restore": {
+        "projectUniqueName": "/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.csproj",
+        "projectName": "Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo",
+        "projectPath": "/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.csproj",
+        "packagesPath": "/home/runner/.nuget/packages/",
+        "outputPath": "/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/obj/",
+        "projectStyle": "PackageReference",
+        "crossTargeting": true,
+        "configFilePaths": [
+          "/home/runner/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0",
+          "netstandard2.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {}
+          },
+          "netstandard2.0": {
+            "targetAlias": "netstandard2.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.Azure.WebJobs": {
+              "target": "Package",
+              "version": "[3.0.41, )"
+            },
+            "MongoDB.Bson": {
+              "target": "Package",
+              "version": "[3.4.0, )"
+            },
+            "MongoDB.Driver": {
+              "target": "Package",
+              "version": "[3.4.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.100/PortableRuntimeIdentifierGraph.json"
+        },
+        "netstandard2.0": {
+          "targetAlias": "netstandard2.0",
+          "dependencies": {
+            "Microsoft.Azure.WebJobs": {
+              "target": "Package",
+              "version": "[3.0.41, )"
+            },
+            "MongoDB.Bson": {
+              "target": "Package",
+              "version": "[2.19.0, )"
+            },
+            "MongoDB.Driver": {
+              "target": "Package",
+              "version": "[2.19.0, )"
+            },
+            "NETStandard.Library": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[2.0.3, )",
+              "autoReferenced": true
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.100/RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
