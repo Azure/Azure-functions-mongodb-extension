@@ -182,13 +182,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                 }
                 catch (Exception ex) when (
                     ex is MongoException || 
-                    ex is OperationCanceledException && !this._cancellationTokenSource.Token.IsCancellationRequested)
+                    (ex is OperationCanceledException && !this._cancellationTokenSource.Token.IsCancellationRequested))
                 {
-                    if (this._cancellationTokenSource.Token.IsCancellationRequested)
-                    {
-                        break;
-                    }
-
                     this._logger.LogWarning(Events.OnChangeStreamError, 
                         $"Change stream cursor error: {ex.GetType().Name} - {ex.Message}. Will retry in {retryDelaySeconds} seconds.");
 
@@ -225,6 +220,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                     {
                         this._logger.LogError(Events.OnChangeStreamError, 
                             $"Failed to reconnect to change stream: {reconnectEx.Message}");
+                        // Continue the outer loop to retry after the next delay period
                     }
                 }
             }

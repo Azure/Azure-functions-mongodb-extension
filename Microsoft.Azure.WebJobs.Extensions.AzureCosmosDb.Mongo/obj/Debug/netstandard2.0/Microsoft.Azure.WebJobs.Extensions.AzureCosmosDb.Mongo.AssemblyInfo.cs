@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCopyrightAttribute("© Microsoft Corporation. All rights reserved.")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("Azure CosmosDB Mongo extensions for .NET isolated functions")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.1.2.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.1.2-preview+0358f14dce50daece6e6e281011dc0c975ae81af")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.1.2-preview+181652e6c220c2e34829e5083f640da0efac13bf")]
 [assembly: System.Reflection.AssemblyProductAttribute("Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.1.2.0")]
