@@ -10,7 +10,7 @@
         "projectUniqueName": "/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Tests/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Tests.csproj",
         "projectName": "Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Tests",
         "projectPath": "/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Tests/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Tests.csproj",
-        "packagesPath": "/home/runner/.nuget/packages/",
+        "packagesPath": "/home/runner/work/Azure-functions-mongodb-extension/.codeql-scratch/dbs/csharp/working/packages",
         "outputPath": "/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Tests/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
@@ -108,6 +108,16 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.22, 8.0.22]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[8.0.22, 8.0.22]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
@@ -123,7 +133,7 @@
         "projectUniqueName": "/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.csproj",
         "projectName": "Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo",
         "projectPath": "/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.csproj",
-        "packagesPath": "/home/runner/.nuget/packages/",
+        "packagesPath": "/home/runner/work/Azure-functions-mongodb-extension/.codeql-scratch/dbs/csharp/working/packages",
         "outputPath": "/home/runner/work/Azure-functions-mongodb-extension/Azure-functions-mongodb-extension/Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo/obj/",
         "projectStyle": "PackageReference",
         "crossTargeting": true,
@@ -187,6 +197,16 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.22, 8.0.22]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[8.0.22, 8.0.22]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
