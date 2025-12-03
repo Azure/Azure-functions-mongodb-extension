@@ -10,7 +10,7 @@
     <description>Azure CosmosDB Mongo extensions for .NET isolated functions</description>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <tags>MongoDB AzureFunctions</tags>
-    <repository type="git" commit="06457fd2fb241563c7777c54b48f2c7084f9cc88" />
+    <repository type="git" commit="0358f14dce50daece6e6e281011dc0c975ae81af" />
     <dependencies>
       <group targetFramework="net8.0">
         <dependency id="Microsoft.Azure.WebJobs" version="3.0.41" exclude="Build,Analyzers" />
