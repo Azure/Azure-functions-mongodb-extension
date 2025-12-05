@@ -22,13 +22,17 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         private IMongoDatabase _database;
         private IMongoCollection<BsonDocument> _collection;
         private MonitorLevel _triggerLevel;
-        private IChangeStreamCursor<BsonDocument> _cursor;
+        private IChangeStreamCursor<ChangeStreamDocument<BsonDocument>> _cursor;
         private CancellationTokenSource _cancellationTokenSource;
         private bool _disposed = false;
         private ActionBlock<ChangeStreamDocument<BsonDocument>> _workerPool;
         private const int MaxConcurrency = 32; // Maximum number of concurrent workers
         private CosmosDBMongoTriggerMetrics _currentMetrics;
         private readonly object _metricsLock = new object();
+        private BsonDocument _resumeToken;
+        private readonly object _resumeTokenLock = new object();
+        private const int MaxRetryDelaySeconds = 300;
+        private const int InitialRetryDelaySeconds = 1;
 
         public CosmosDBMongoTriggerListener(ITriggeredFunctionExecutor executor, MongoCollectionReference reference, ILogger logger)
         {
@@ -92,61 +96,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         {
             try
             {
-                var pipeline = new EmptyPipelineDefinition<ChangeStreamDocument<BsonDocument>>()
-                    .Match(change =>
-                        change.OperationType == ChangeStreamOperationType.Insert ||
-                        change.OperationType == ChangeStreamOperationType.Update ||
-                        change.OperationType == ChangeStreamOperationType.Replace)
-                    //;
-                    .Project<ChangeStreamDocument<BsonDocument>, ChangeStreamDocument<BsonDocument>>(
-                        Builders<ChangeStreamDocument<BsonDocument>>.Projection
-                            .Include(x => x.FullDocument)
-                            .Include(x => x.DocumentKey)
-                            .Include("_id")
-                            .Include("ns")
-                    );
+                this._cursor = await CreateChangeStreamAsync(null, cancellationToken);
 
-                var changeStreamOption = new ChangeStreamOptions
-                    {
-                        FullDocument = ChangeStreamFullDocumentOption.UpdateLookup,
-                    };
-                switch (this._triggerLevel)
-                {
-                    case MonitorLevel.Cluster:
-                        this._cursor = await this._reference.client.WatchAsync(
-                            pipeline, changeStreamOption, cancellationToken);
-                        break;
-                    case MonitorLevel.Database:
-                        this._database = this._reference.client.GetDatabase(this._reference.databaseName);
-                        this._cursor = await this._database.WatchAsync(
-                            pipeline, changeStreamOption, cancellationToken);
-                        break;
-                    case MonitorLevel.Collection:
-                        this._database = this._reference.client.GetDatabase(this._reference.databaseName);
-                        this._collection = this._database.GetCollection<BsonDocument>(this._reference.collectionName);
-                        this._cursor = await this._collection.WatchAsync(
-                            pipeline, changeStreamOption, cancellationToken);
-                        break;
-                    default:
-                        throw new InvalidOperationException("Unknown trigger level.");
-                }
-                IBsonSerializer<BsonDocument> documentSerializer = BsonSerializer.SerializerRegistry.GetSerializer<BsonDocument>();
-
-                _ = Task.Run(async () =>
-                {
-                    while (!this._cancellationTokenSource.Token.IsCancellationRequested)
-                    {
-                        while (await this._cursor.MoveNextAsync(this._cancellationTokenSource.Token))
-                        {
-                            var batch = this._cursor.Current;
-                            foreach (var bsonDoc in batch)
-                            {
-                                var change = new ChangeStreamDocument<BsonDocument>(bsonDoc, documentSerializer);
-                                await _workerPool.SendAsync(change, this._cancellationTokenSource.Token);
-                            }
-                        }
-                    }
-                }, this._cancellationTokenSource.Token);
+                _ = Task.Run(async () =>{ await ConsumeChangeStreamAsync(); }, this._cancellationTokenSource.Token);
                 this._logger.LogDebug(Events.OnListenerStarted, "MongoDB trigger listener started.");
             }
             catch (Exception ex)
@@ -156,6 +108,120 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             }
         }
 
+        private PipelineDefinition<ChangeStreamDocument<BsonDocument>, ChangeStreamDocument<BsonDocument>> CreatePipeline()
+        {
+            return new EmptyPipelineDefinition<ChangeStreamDocument<BsonDocument>>()
+                .Match(change =>
+                    change.OperationType == ChangeStreamOperationType.Insert ||
+                    change.OperationType == ChangeStreamOperationType.Update ||
+                    change.OperationType == ChangeStreamOperationType.Replace);
+        }
+
+        private async Task<IChangeStreamCursor<ChangeStreamDocument<BsonDocument>>> CreateChangeStreamAsync(BsonDocument resumeAfter, CancellationToken cancellationToken)
+        {
+            var pipeline = CreatePipeline();
+
+            var changeStreamOption = new ChangeStreamOptions
+            {
+                FullDocument = ChangeStreamFullDocumentOption.UpdateLookup,
+            };
+
+            if (resumeAfter != null)
+            {
+                changeStreamOption.ResumeAfter = resumeAfter;
+            }
+
+            switch (this._triggerLevel)
+            {
+                case MonitorLevel.Cluster:
+                    return await this._reference.client.WatchAsync(
+                        pipeline, changeStreamOption, cancellationToken);
+                case MonitorLevel.Database:
+                    this._database = this._reference.client.GetDatabase(this._reference.databaseName);
+                    return await this._database.WatchAsync(
+                        pipeline, changeStreamOption, cancellationToken);
+                case MonitorLevel.Collection:
+                    this._database = this._reference.client.GetDatabase(this._reference.databaseName);
+                    this._collection = this._database.GetCollection<BsonDocument>(this._reference.collectionName);
+                    return await this._collection.WatchAsync(
+                        pipeline, changeStreamOption, cancellationToken);
+                default:
+                    throw new InvalidOperationException("Unknown trigger level.");
+            }
+        }
+
+        private async Task ConsumeChangeStreamAsync()
+        {
+            int retryDelaySeconds = InitialRetryDelaySeconds;
+
+            while (!this._cancellationTokenSource.Token.IsCancellationRequested)
+            {
+                try
+                {
+                    while (await this._cursor.MoveNextAsync(this._cancellationTokenSource.Token))
+                    {
+                        var batch = this._cursor.Current;
+                        foreach (var change in batch)
+                        {
+                            // Save the resume token before processing
+                            lock (_resumeTokenLock)
+                            {
+                                _resumeToken = change.ResumeToken;
+                            }
+
+                            await _workerPool.SendAsync(change, this._cancellationTokenSource.Token);
+                        }
+
+                        // Reset retry delay on successful processing
+                        retryDelaySeconds = InitialRetryDelaySeconds;
+                    }
+                }
+                catch (Exception ex) when (
+                    ex is MongoException || 
+                    (ex is OperationCanceledException && !this._cancellationTokenSource.Token.IsCancellationRequested))
+                {
+                    this._logger.LogWarning(Events.OnChangeStreamError, 
+                        $"Change stream cursor error: {ex.GetType().Name} - {ex.Message}. Will retry in {retryDelaySeconds} seconds.");
+
+                    // Wait with exponential backoff
+                    await Task.Delay(TimeSpan.FromSeconds(retryDelaySeconds), this._cancellationTokenSource.Token);
+
+                    // Exponential backoff with max limit
+                    retryDelaySeconds = Math.Min(retryDelaySeconds * 2, MaxRetryDelaySeconds);
+
+                    // Attempt to reconnect with resume token
+                    BsonDocument resumeToken;
+                    lock (_resumeTokenLock)
+                    {
+                        resumeToken = _resumeToken;
+                    }
+
+                    try
+                    {
+                        this._logger.LogInformation(Events.OnChangeStreamReconnecting, 
+                            resumeToken != null 
+                                ? "Reconnecting to change stream with resume token..." 
+                                : "Reconnecting to change stream from beginning...");
+
+                        this._cursor?.Dispose();
+                        this._cursor = await CreateChangeStreamAsync(resumeToken, this._cancellationTokenSource.Token);
+
+                        this._logger.LogInformation(Events.OnChangeStreamReconnected, 
+                            "Successfully reconnected to change stream.");
+
+                        // Reset retry delay after successful reconnection
+                        retryDelaySeconds = InitialRetryDelaySeconds;
+                    }
+                    catch (Exception reconnectEx)
+                    {
+                        this._logger.LogError(Events.OnChangeStreamError, 
+                            $"Failed to reconnect to change stream: {reconnectEx.Message}");
+                        // Continue the outer loop to retry after the next delay period
+                    }
+                }
+            }
+        }
+        
         public async Task StopAsync(CancellationToken cancellationToken)
         {
             try

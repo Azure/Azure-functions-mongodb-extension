@@ -26,5 +26,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         public static readonly EventId OnListenerStopped = new EventId(7000, "OnListenerStopped");
         public static readonly EventId OnListenerStartError  = new EventId(8000, "OnListenerStartError ");
         public static readonly EventId OnListenerStopError = new EventId(9000, "OnListenerStopError");
+        public static readonly EventId OnChangeStreamError = new EventId(10000, "OnChangeStreamError");
+        public static readonly EventId OnChangeStreamReconnecting = new EventId(10010, "OnChangeStreamReconnecting");
+        public static readonly EventId OnChangeStreamReconnected = new EventId(10020, "OnChangeStreamReconnected");
     }
 }
