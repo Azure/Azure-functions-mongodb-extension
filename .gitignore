@@ -1,0 +1,47 @@
+## Repo-wide ignore: Visual Studio / .NET / Azure Functions
+
+# Local settings / secrets
+local.settings.json
+*.publishsettings
+*.azurePubxml
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+x64/
+x86/
+artifacts/
+
+# VS / IDE cache
+.vs/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.sln.iml
+
+# Test results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# Packages
+*.nupkg
+**/packages/*
+!**/packages/build/
+
+# Tools / misc
+*.pidb
+*.svclog
+*.tmp
+*.log
+*.cache
+*.dbmdl
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
