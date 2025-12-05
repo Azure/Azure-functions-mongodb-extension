@@ -31,6 +31,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         private readonly object _metricsLock = new object();
         private BsonDocument _resumeToken;
         private readonly object _resumeTokenLock = new object();
+        private readonly object _cursorLock = new object();
         private const int MaxRetryDelaySeconds = 300;
         private const int InitialRetryDelaySeconds = 1;
 
@@ -98,7 +99,21 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             {
                 this._cursor = await CreateChangeStreamAsync(null, cancellationToken);
 
-                _ = Task.Run(async () =>{ await ConsumeChangeStreamAsync(); }, this._cancellationTokenSource.Token);
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await ConsumeChangeStreamAsync();
+                    }
+                    catch (OperationCanceledException) when (this._cancellationTokenSource.Token.IsCancellationRequested)
+                    {
+                        // Expected during shutdown
+                    }
+                    catch (Exception ex)
+                    {
+                        this._logger.LogError(Events.OnError, $"Unexpected error in change stream consumer: {ex.Message}");
+                    }
+                }, this._cancellationTokenSource.Token);
                 this._logger.LogDebug(Events.OnListenerStarted, "MongoDB trigger listener started.");
             }
             catch (Exception ex)
@@ -114,7 +129,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                 .Match(change =>
                     change.OperationType == ChangeStreamOperationType.Insert ||
                     change.OperationType == ChangeStreamOperationType.Update ||
-                    change.OperationType == ChangeStreamOperationType.Replace);
+                    change.OperationType == ChangeStreamOperationType.Replace)
+                .Project<ChangeStreamDocument<BsonDocument>, ChangeStreamDocument<BsonDocument>>(
+                    Builders<ChangeStreamDocument<BsonDocument>>.Projection
+                        .Include(x => x.FullDocument)
+                        .Include(x => x.DocumentKey)
+                        .Include("_id")
+                        .Include("ns")
+                );
         }
 
         private async Task<IChangeStreamCursor<ChangeStreamDocument<BsonDocument>>> CreateChangeStreamAsync(BsonDocument resumeAfter, CancellationToken cancellationToken)
@@ -158,21 +180,25 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             {
                 try
                 {
-                    while (await this._cursor.MoveNextAsync(this._cancellationTokenSource.Token))
+                    bool hasMore;
+                    lock (_cursorLock)
+                    {
+                        hasMore = _cursor != null;
+                    }
+
+                    while (hasMore && await this._cursor.MoveNextAsync(this._cancellationTokenSource.Token))
                     {
                         var batch = this._cursor.Current;
                         foreach (var change in batch)
                         {
-                            // Save the resume token before processing
+                            await _workerPool.SendAsync(change, this._cancellationTokenSource.Token);
+
                             lock (_resumeTokenLock)
                             {
                                 _resumeToken = change.ResumeToken;
                             }
-
-                            await _workerPool.SendAsync(change, this._cancellationTokenSource.Token);
                         }
 
-                        // Reset retry delay on successful processing
                         retryDelaySeconds = InitialRetryDelaySeconds;
                     }
                 }
@@ -203,32 +229,46 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                                 ? "Reconnecting to change stream with resume token..." 
                                 : "Reconnecting to change stream from beginning...");
 
-                        this._cursor?.Dispose();
-                        this._cursor = await CreateChangeStreamAsync(resumeToken, this._cancellationTokenSource.Token);
+                        var newCursor = await CreateChangeStreamAsync(resumeToken, this._cancellationTokenSource.Token);
+                        lock (_cursorLock)
+                        {
+                            this._cursor?.Dispose();
+                            this._cursor = newCursor;
+                        }
 
                         this._logger.LogInformation(Events.OnChangeStreamReconnected, 
                             "Successfully reconnected to change stream.");
 
-                        // Reset retry delay after successful reconnection
                         retryDelaySeconds = InitialRetryDelaySeconds;
+                    }
+                    catch (OperationCanceledException) when (this._cancellationTokenSource.Token.IsCancellationRequested)
+                    {
+                        throw;
                     }
                     catch (Exception reconnectEx)
                     {
                         this._logger.LogError(Events.OnChangeStreamError, 
                             $"Failed to reconnect to change stream: {reconnectEx.Message}");
-                        // Continue the outer loop to retry after the next delay period
                     }
                 }
             }
         }
-        
+
         public async Task StopAsync(CancellationToken cancellationToken)
         {
             try
             {
+                this._cancellationTokenSource.Cancel();
+
                 _workerPool.Complete();
                 await _workerPool.Completion;
-                this._cursor.Dispose();
+
+                lock (_cursorLock)
+                {
+                    this._cursor?.Dispose();
+                    this._cursor = null;
+                }
+
                 this._logger.LogDebug(Events.OnListenerStopped, "MongoDB trigger listener stopped.");
             }
             catch (Exception ex)
