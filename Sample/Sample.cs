@@ -48,7 +48,9 @@ namespace Sample
 
         [FunctionName("TriggerSample")]
         public static void TriggerRun(
-          [CosmosDBMongoTrigger("TestDatabase", "TestCollection")] ChangeStreamDocument<BsonDocument> doc,
+          [CosmosDBMongoTrigger("TestDatabase", "TestCollection", 
+              LeaseDatabaseName = "TestDatabase", 
+              LeaseCollectionName = "leases")] ChangeStreamDocument<BsonDocument> doc,
           ILogger log)
         {
             log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
