@@ -13,11 +13,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         public bool createIfNotExists { get; }
         public string functionId { get; set; } = string.Empty;
         
-        // Lease collection properties
+        // Lease collection properties (required)
         public IMongoClient leaseClient { get; set; }
         public string leaseDatabaseName { get; set; }
         public string leaseCollectionName { get; set; }
-        public bool useLeaseCollection => !string.IsNullOrEmpty(leaseDatabaseName) && !string.IsNullOrEmpty(leaseCollectionName);
 
         public MongoCollectionReference(IMongoClient client, string databaseName, string collectionName, bool createIfNotExists = true)
         {

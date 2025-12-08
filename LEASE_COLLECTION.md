@@ -2,7 +2,7 @@
 
 ## Overview
 
-The lease collection feature enables better scaling and reliable event processing for MongoDB triggers by using a separate collection to store and consume change stream events.
+The MongoDB trigger uses a lease collection to enable reliable event processing and accurate scaling. The lease collection stores change stream events that are then consumed by worker threads.
 
 ## Architecture
 
@@ -14,15 +14,15 @@ The lease collection implements a producer-consumer pattern:
 
 ## Configuration
 
-To enable the lease collection feature, add the following properties to your `CosmosDBMongoTrigger` attribute:
+The lease collection is **required** for all MongoDB triggers. You must specify `LeaseDatabaseName` and `LeaseCollectionName` in your `CosmosDBMongoTrigger` attribute:
 
 ```csharp
 [CosmosDBMongoTrigger(
     databaseName: "myDatabase",
     collectionName: "myCollection",
     ConnectionStringSetting = "MongoConnection",
-    LeaseDatabaseName = "leases",
-    LeaseCollectionName = "myTriggerLeases",
+    LeaseDatabaseName = "leases",                     // Required
+    LeaseCollectionName = "myTriggerLeases",          // Required
     LeaseConnectionStringSetting = "LeaseMongoConnection")]  // Optional, defaults to MongoConnection
 public void Run([CosmosDBMongoTrigger] ChangeStreamDocument<BsonDocument> document, ILogger log)
 {
@@ -32,8 +32,8 @@ public void Run([CosmosDBMongoTrigger] ChangeStreamDocument<BsonDocument> docume
 
 ### Properties
 
-- **LeaseDatabaseName**: Database name for storing lease documents (required for lease collection mode)
-- **LeaseCollectionName**: Collection name for storing lease documents (required for lease collection mode)
+- **LeaseDatabaseName**: Database name for storing lease documents (required)
+- **LeaseCollectionName**: Collection name for storing lease documents (required)
 - **LeaseConnectionStringSetting**: Connection string setting for the lease cluster (optional, defaults to the monitored cluster connection)
 
 ## Benefits
@@ -43,10 +43,6 @@ public void Run([CosmosDBMongoTrigger] ChangeStreamDocument<BsonDocument> docume
 3. **Separate Scaling**: The lease collection can be on a different cluster with different performance characteristics
 4. **Durability**: Events are persisted before processing, enabling recovery after failures
 5. **Visibility**: Administrators can query the lease collection to monitor pending events
-
-## Backward Compatibility
-
-If lease collection properties are not specified, the trigger uses the existing in-memory behavior with no changes required.
 
 ## Implementation Details
 
@@ -98,15 +94,6 @@ The lease collection is initialized with the following indexes:
     LeaseDatabaseName = "leases",
     LeaseCollectionName = "myTriggerLeases",
     LeaseConnectionStringSetting = "LeaseMongoConnection")]
-```
-
-### No Lease Collection (Backward Compatible)
-
-```csharp
-[CosmosDBMongoTrigger(
-    databaseName: "myDatabase",
-    collectionName: "myCollection",
-    ConnectionStringSetting = "MongoConnection")]
 ```
 
 ## Monitoring
