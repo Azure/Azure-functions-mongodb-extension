@@ -79,6 +79,24 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         /// The monitored level of trigger
         /// </summary>
         public MonitorLevel TriggerLevel { get; set; } = MonitorLevel.Collection;
+
+        /// <summary>
+        /// Optional connection string for the lease cluster.
+        /// If not specified, defaults to the monitored cluster connection string.
+        /// </summary>
+        public string LeaseConnectionStringSetting { get; set; }
+
+        /// <summary>
+        /// Optional database name for the lease collection.
+        /// Required if lease collection is enabled.
+        /// </summary>
+        public string LeaseDatabaseName { get; set; }
+
+        /// <summary>
+        /// Optional collection name for the lease collection.
+        /// Required if lease collection is enabled.
+        /// </summary>
+        public string LeaseCollectionName { get; set; }
     }
 
     public class CosmosDBMongoTriggerContext
