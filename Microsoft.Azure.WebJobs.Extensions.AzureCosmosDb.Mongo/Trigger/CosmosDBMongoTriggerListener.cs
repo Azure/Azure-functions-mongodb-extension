@@ -125,18 +125,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 
         private PipelineDefinition<ChangeStreamDocument<BsonDocument>, ChangeStreamDocument<BsonDocument>> CreatePipeline()
         {
-            return new EmptyPipelineDefinition<ChangeStreamDocument<BsonDocument>>()
+            var matchStage = new EmptyPipelineDefinition<ChangeStreamDocument<BsonDocument>>()
                 .Match(change =>
                     change.OperationType == ChangeStreamOperationType.Insert ||
                     change.OperationType == ChangeStreamOperationType.Update ||
-                    change.OperationType == ChangeStreamOperationType.Replace)
-                .Project<ChangeStreamDocument<BsonDocument>, ChangeStreamDocument<BsonDocument>>(
-                    Builders<ChangeStreamDocument<BsonDocument>>.Projection
-                        .Include(x => x.FullDocument)
-                        .Include(x => x.DocumentKey)
-                        .Include("_id")
-                        .Include("ns")
-                );
+                    change.OperationType == ChangeStreamOperationType.Replace);
+            
+            return matchStage;
         }
 
         private async Task<IChangeStreamCursor<ChangeStreamDocument<BsonDocument>>> CreateChangeStreamAsync(BsonDocument resumeAfter, CancellationToken cancellationToken)
