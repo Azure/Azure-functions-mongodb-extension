@@ -61,8 +61,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                 : _configProvider.ResolveConnectionString(attribute.LeaseConnectionStringSetting);
             
             reference.leaseClient = _configProvider.GetService(leaseConnectionString);
-            reference.leaseDatabaseName = ResolveAttributeValue(attribute.LeaseDatabaseName);
-            reference.leaseCollectionName = ResolveAttributeValue(attribute.LeaseCollectionName);
+            reference.leaseDatabaseName = ResolveAttributeValue(attribute.LeaseDatabaseName) ?? attribute.LeaseDatabaseName;
+            reference.leaseCollectionName = ResolveAttributeValue(attribute.LeaseCollectionName) ?? attribute.LeaseCollectionName;
             
             return
                 Task.FromResult<ITriggerBinding>(new CosmosDBMongoTriggerBinding(context.Parameter,

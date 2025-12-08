@@ -63,6 +63,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             }
             
             // Initialize lease collection manager (always required)
+            if (_reference.leaseClient == null || string.IsNullOrEmpty(_reference.leaseDatabaseName) || string.IsNullOrEmpty(_reference.leaseCollectionName))
+            {
+                throw new ArgumentException("Lease collection properties are required but not configured.", nameof(reference));
+            }
+            
             _leaseCollectionManager = new LeaseCollectionManager(
                 _reference.leaseClient,
                 _reference.leaseDatabaseName,
