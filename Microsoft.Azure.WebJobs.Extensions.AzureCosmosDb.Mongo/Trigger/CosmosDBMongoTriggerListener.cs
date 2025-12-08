@@ -34,6 +34,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         private readonly object _cursorLock = new object();
         private const int MaxRetryDelaySeconds = 300;
         private const int InitialRetryDelaySeconds = 1;
+        private const int MaxInsertRetries = 3;
+        private const int ConsumerPollingDelayMs = 500;
+        private const string UnknownSourceCluster = "unknown";
         
         // Lease collection support
         private LeaseCollectionManager _leaseCollectionManager;
@@ -341,24 +344,27 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                                 // Serialize change event to BsonDocument
                                 var changeEventBson = change.ToBsonDocument();
 
+                                // Capture current time for consistency
+                                var now = DateTime.UtcNow;
+
                                 // Create lease document
                                 var leaseDocument = new LeaseDocument
                                 {
-                                    Timestamp = DateTime.UtcNow,
+                                    Timestamp = now,
                                     MonitorLevel = _triggerLevel,
-                                    SourceCluster = _reference.client.Settings.Server?.ToString() ?? "unknown",
+                                    SourceCluster = _reference.client.Settings.Server?.ToString() ?? UnknownSourceCluster,
                                     SourceDatabase = _reference.databaseName,
                                     SourceCollection = _reference.collectionName,
                                     FunctionId = _reference.functionId,
                                     ResumeToken = change.ResumeToken,
                                     ChangeEvent = changeEventBson,
-                                    CreatedAt = DateTime.UtcNow
+                                    CreatedAt = now
                                 };
 
                                 // Insert into lease collection with retry
                                 int insertRetryCount = 0;
                                 int insertRetryDelay = InitialRetryDelaySeconds;
-                                while (insertRetryCount < 3)
+                                while (insertRetryCount < MaxInsertRetries)
                                 {
                                     try
                                     {
@@ -368,12 +374,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                                     catch (Exception insertEx)
                                     {
                                         insertRetryCount++;
-                                        if (insertRetryCount >= 3)
+                                        if (insertRetryCount >= MaxInsertRetries)
                                         {
-                                            _logger.LogError(Events.OnError, $"Failed to insert lease document after 3 retries: {insertEx.Message}");
+                                            _logger.LogError(Events.OnError, $"Failed to insert lease document after {MaxInsertRetries} retries: {insertEx.Message}");
                                             throw;
                                         }
-                                        _logger.LogWarning($"Failed to insert lease document, retry {insertRetryCount}/3: {insertEx.Message}");
+                                        _logger.LogWarning($"Failed to insert lease document, retry {insertRetryCount}/{MaxInsertRetries}: {insertEx.Message}");
                                         await Task.Delay(TimeSpan.FromSeconds(insertRetryDelay), this._cancellationTokenSource.Token);
                                         insertRetryDelay = Math.Min(insertRetryDelay * 2, MaxRetryDelaySeconds);
                                     }
@@ -501,7 +507,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                     else
                     {
                         // No documents available, wait before polling again
-                        await Task.Delay(TimeSpan.FromMilliseconds(500), this._cancellationTokenSource.Token);
+                        await Task.Delay(TimeSpan.FromMilliseconds(ConsumerPollingDelayMs), this._cancellationTokenSource.Token);
                     }
                 }
                 catch (OperationCanceledException) when (this._cancellationTokenSource.Token.IsCancellationRequested)

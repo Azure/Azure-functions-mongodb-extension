@@ -22,7 +22,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         private IMongoDatabase _leaseDatabase;
         private IMongoCollection<LeaseDocument> _leaseCollection;
         private bool _initialized = false;
-        private readonly object _initializationLock = new object();
+        private readonly SemaphoreSlim _initializationSemaphore = new SemaphoreSlim(1, 1);
 
         public LeaseCollectionManager(
             IMongoClient leaseClient,
@@ -46,7 +46,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                 return;
             }
 
-            lock (_initializationLock)
+            await _initializationSemaphore.WaitAsync(cancellationToken);
+            try
             {
                 if (_initialized)
                 {
@@ -56,6 +57,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                 _leaseDatabase = _leaseClient.GetDatabase(_leaseDatabaseName);
                 _leaseCollection = _leaseDatabase.GetCollection<LeaseDocument>(_leaseCollectionName);
                 _initialized = true;
+            }
+            finally
+            {
+                _initializationSemaphore.Release();
             }
 
             try
