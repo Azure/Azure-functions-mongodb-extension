@@ -54,10 +54,31 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 
         public ParameterDescriptor ToParameterDescriptor()
         {
-            return new TriggerParameterDescriptor()
+            return new CosmosDBMongoTriggerParameterDescriptor
             {
                 Name = "CosmosDBMongoTrigger",
+                FunctionName = _monitoredCollectionRef.functionId,
+                DatabaseName = _monitoredCollectionRef.databaseName,
+                CollectionName = _monitoredCollectionRef.collectionName,
+                LeaseConnectionStringSetting = _monitoredCollectionRef.leaseConnectionStringSetting,
+                LeaseDatabaseName = _monitoredCollectionRef.leaseDatabaseName,
+                LeaseCollectionName = _monitoredCollectionRef.leaseCollectionName
             };
+        }
+
+        internal class CosmosDBMongoTriggerParameterDescriptor : TriggerParameterDescriptor
+        {
+            public string FunctionName { get; set; }
+            public string DatabaseName { get; set; }
+            public string CollectionName { get; set; }
+            public string LeaseConnectionStringSetting { get; set; }
+            public string LeaseDatabaseName { get; set; }
+            public string LeaseCollectionName { get; set; }
+
+            public override string GetTriggerReason(IDictionary<string, string> arguments)
+            {
+                return string.Format("CosmosDB Mongo trigger fired at {0}", DateTime.Now.ToString("o"));
+            }
         }
 
         private class CosmosDBMongoValueProvider : IValueProvider

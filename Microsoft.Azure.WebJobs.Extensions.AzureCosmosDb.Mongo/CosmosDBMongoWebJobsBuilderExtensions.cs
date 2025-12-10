@@ -3,6 +3,7 @@
 
 using Microsoft.Azure.WebJobs.Host.Scale;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
 using System.Linq;
 
@@ -18,6 +19,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             }
 
             builder.AddExtension<CosmosDBMongoConfigProvider>();
+            builder.Services.TryAddSingleton<CosmosDBMongoConfigProvider>();
 
             builder.Services.AddSingleton<ICosmosDBMongoBindingCollectorFactory, CosmosDBMongoBindingCollectorFactory>();
 

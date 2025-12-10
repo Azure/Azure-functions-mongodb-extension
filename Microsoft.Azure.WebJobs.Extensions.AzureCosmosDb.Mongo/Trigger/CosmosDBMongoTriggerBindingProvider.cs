@@ -56,7 +56,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                 throw new InvalidOperationException(
                     "LeaseDatabaseName is required. Please specify a database name for the lease collection.");
             }
-            
+
             string leaseCollectionName = ResolveAttributeValue(attribute.LeaseCollectionName);
             if (string.IsNullOrEmpty(leaseCollectionName))
             {
@@ -65,6 +65,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             }
             
             reference.leaseClient = _configProvider.GetService(leaseConnectionString);
+            reference.leaseConnectionStringSetting = string.IsNullOrEmpty(attribute.LeaseConnectionStringSetting) 
+                ? attribute.ConnectionStringSetting 
+                : attribute.LeaseConnectionStringSetting;
             reference.leaseDatabaseName = leaseDatabaseName;
             reference.leaseCollectionName = leaseCollectionName;
             

@@ -36,7 +36,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         private const string UnknownSourceCluster = "unknown";
         
         // Lease collection support
-        private LeaseCollectionManager _leaseCollectionManager;
+        private readonly LeaseCollectionManager _leaseCollectionManager;
         private Task _producerTask;
         private Task[] _consumerTasks;
         private const int ConsumerCount = 32; // Number of consumer workers
@@ -423,7 +423,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                 // Wait for consumer tasks to complete
                 if (_consumerTasks != null)
                 {
-                    await Task.WhenAll(_consumerTasks);
+                    try
+                    {
+                        await Task.WhenAll(_consumerTasks);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning($"One or more consumer tasks failed during stop: {ex.Message}");
+                    }
                 }
 
                 lock (_cursorLock)

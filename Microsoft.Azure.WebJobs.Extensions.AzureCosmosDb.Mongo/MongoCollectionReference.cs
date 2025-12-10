@@ -15,6 +15,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         
         // Lease collection properties
         public IMongoClient leaseClient { get; set; }
+        public string leaseConnectionStringSetting { get; set; }
         public string leaseDatabaseName { get; set; }
         public string leaseCollectionName { get; set; }
 

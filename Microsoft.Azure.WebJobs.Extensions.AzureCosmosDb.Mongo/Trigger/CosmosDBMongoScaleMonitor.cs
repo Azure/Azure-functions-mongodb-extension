@@ -26,6 +26,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             string databaseName,
             string collectionName,
             ILoggerFactory loggerFactory,
+            LeaseCollectionManager leaseCollectionManager,
             int maxWorkPerInstance = 1000,
             int minSampleCount = 5
             )
@@ -35,7 +36,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             _collectionName = collectionName;
             _scaleMonitorDescriptor = new ScaleMonitorDescriptor($"{_functionId}-{_databaseName}-{_collectionName}", _functionId);
             _logger = loggerFactory.CreateLogger<CosmosDBMongoScaleMonitor>();
-            _cosmosDBMongoMetricsProvider = new CosmosDBMongoMetricsProvider(_functionId, _databaseName, _collectionName, loggerFactory);
+            _cosmosDBMongoMetricsProvider = new CosmosDBMongoMetricsProvider(_functionId, _databaseName, _collectionName, loggerFactory, leaseCollectionManager);
             _maxWorkPerInstance = maxWorkPerInstance;
             _minSampleCount = minSampleCount;
         }

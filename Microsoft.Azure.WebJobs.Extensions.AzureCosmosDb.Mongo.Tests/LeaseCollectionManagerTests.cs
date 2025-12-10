@@ -50,17 +50,19 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Tests
             var mockIndexManager = new Mock<IMongoIndexManager<LeaseDocument>>();
             _mockCollection.Setup(c => c.Indexes).Returns(mockIndexManager.Object);
             
-            mockIndexManager.Setup(m => m.CreateManyAsync(
-                It.IsAny<CreateIndexModel<LeaseDocument>[]>(),
+            mockIndexManager.Setup(m => m.CreateOneAsync(
+                It.IsAny<CreateIndexModel<LeaseDocument>>(),
+                It.IsAny<CreateOneIndexOptions>(),
                 It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new[] { "index1", "index2" });
+                .ReturnsAsync("index1");
 
             // Act
             await _manager.InitializeAsync();
 
             // Assert
-            mockIndexManager.Verify(m => m.CreateManyAsync(
-                It.Is<CreateIndexModel<LeaseDocument>[]>(models => models.Length == 2),
+            mockIndexManager.Verify(m => m.CreateOneAsync(
+                It.Is<CreateIndexModel<LeaseDocument>>(model => model.Keys != null),
+                It.IsAny<CreateOneIndexOptions>(),
                 It.IsAny<CancellationToken>()), Times.Once);
         }
 
