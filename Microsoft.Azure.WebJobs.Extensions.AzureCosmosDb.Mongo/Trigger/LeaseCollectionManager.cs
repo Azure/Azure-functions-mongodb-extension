@@ -66,26 +66,19 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             try
             {
                 // Create indexes for efficient querying
-                var indexKeysDefinition1 = Builders<LeaseDocument>.IndexKeys
-                    .Ascending(d => d.Timestamp)
-                    .Ascending(d => d.FunctionId);
-                
-                var indexKeysDefinition2 = Builders<LeaseDocument>.IndexKeys
+                var indexKeysDefinition = Builders<LeaseDocument>.IndexKeys
                     .Ascending(d => d.FunctionId)
                     .Ascending(d => d.SourceDatabase)
                     .Ascending(d => d.SourceCollection)
                     .Ascending(d => d.Timestamp);
 
-                var indexModel1 = new CreateIndexModel<LeaseDocument>(
-                    indexKeysDefinition1,
-                    new CreateIndexOptions { Name = "timestamp_functionId" });
-
-                var indexModel2 = new CreateIndexModel<LeaseDocument>(
-                    indexKeysDefinition2,
+                var indexModel = new CreateIndexModel<LeaseDocument>(
+                    indexKeysDefinition,
                     new CreateIndexOptions { Name = "functionId_source_timestamp" });
 
-                await _leaseCollection.Indexes.CreateManyAsync(
-                    new[] { indexModel1, indexModel2 },
+                await _leaseCollection.Indexes.CreateOneAsync(
+                    indexModel,
+                    null,
                     cancellationToken);
 
                 _logger.LogInformation("Lease collection initialized with indexes.");

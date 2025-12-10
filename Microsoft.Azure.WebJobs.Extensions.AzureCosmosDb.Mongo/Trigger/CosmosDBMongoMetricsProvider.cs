@@ -31,40 +31,32 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 
         public async Task<CosmosDBMongoTriggerMetrics> GetMetricsAsync()
         {
-            if (_leaseCollectionManager != null)
+            if (_leaseCollectionManager == null)
             {
-                // Query lease collection for pending count
-                try
-                {
-                    var pendingCount = await _leaseCollectionManager.CountPendingDocumentsAsync(
-                        _functionId,
-                        _databaseName,
-                        _collectionName);
-                    
-                    var metrics = new CosmosDBMongoTriggerMetrics
-                    {
-                        PendingEventsCount = pendingCount,
-                        Timestamp = DateTime.UtcNow
-                    };
-                    
-                    _logger.LogDebug($"Retrieved lease collection metrics with pending count: {pendingCount} for function {_functionId}");
-                    return metrics;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError($"Failed to get metrics from lease collection: {ex.Message}");
-                    // Fall back to in-memory metrics
-                }
+                _logger.LogError("Lease collection manager is not configured.");
+                throw new InvalidOperationException("Lease collection manager is not configured.");
             }
-            
-            // Fall back to in-memory metrics
-            var metricsHistory = CosmosDBMongoMetricsStore.GetMetricsHistory(_functionId, _databaseName, _collectionName);
-            var latestMetrics = metricsHistory.Length > 0
-                ? metricsHistory[metricsHistory.Length - 1]
-                : CosmosDBMongoMetricsStore.GetMetrics(_functionId, _databaseName, _collectionName);
-
-            _logger.LogDebug($"Retrieved latest metrics with pending count: {latestMetrics.PendingEventsCount} for function {_functionId}");
-            return latestMetrics;
+            try
+            {
+                var pendingCount = await _leaseCollectionManager.CountPendingDocumentsAsync(
+                    _functionId,
+                    _databaseName,
+                    _collectionName);
+                
+                var metrics = new CosmosDBMongoTriggerMetrics
+                {
+                    PendingEventsCount = pendingCount,
+                    Timestamp = DateTime.UtcNow
+                };
+                
+                _logger.LogInformation($"Retrieved lease collection metrics with pending count: {pendingCount} for function {_functionId}");
+                return metrics;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to get metrics from lease collection: {ex.Message}");
+                throw new InvalidOperationException("Failed to get metrics from lease collection.", ex);
+            }
         }
 
         public Task<CosmosDBMongoTriggerMetrics[]> GetMetricsHistoryAsync()

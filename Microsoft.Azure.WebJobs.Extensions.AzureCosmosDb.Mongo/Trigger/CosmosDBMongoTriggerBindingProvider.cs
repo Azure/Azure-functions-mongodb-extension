@@ -34,35 +34,39 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                 return Task.FromResult<ITriggerBinding>(null);
             }
             
-            // Validate that lease collection is configured
-            if (string.IsNullOrEmpty(attribute.LeaseDatabaseName))
-            {
-                throw new InvalidOperationException(
-                    $"LeaseDatabaseName is required. Please specify a database name for the lease collection.");
-            }
-            
-            if (string.IsNullOrEmpty(attribute.LeaseCollectionName))
-            {
-                throw new InvalidOperationException(
-                    $"LeaseCollectionName is required. Please specify a collection name for the lease collection.");
-            }
-            
             string connectionString = _configProvider.ResolveConnectionString(attribute.ConnectionStringSetting);
             string functionId = context.Parameter.Member.Name;
+            
+            string databaseName = ResolveAttributeValue(attribute.DatabaseName);
+            string collectionName = ResolveAttributeValue(attribute.CollectionName);
+            
             var reference = new MongoCollectionReference(
                         _configProvider.GetService(connectionString),
-                        ResolveAttributeValue(attribute.DatabaseName),
-                        ResolveAttributeValue(attribute.CollectionName));
+                        databaseName,
+                        collectionName);
             reference.functionId = functionId;
             
-            // Always setup lease collection (required)
+            // Resolve lease connection string (defaults to monitored cluster connection string)
             string leaseConnectionString = string.IsNullOrEmpty(attribute.LeaseConnectionStringSetting)
                 ? connectionString
                 : _configProvider.ResolveConnectionString(attribute.LeaseConnectionStringSetting);
+            string leaseDatabaseName = ResolveAttributeValue(attribute.LeaseDatabaseName);
+            if (string.IsNullOrEmpty(leaseDatabaseName))
+            {
+                throw new InvalidOperationException(
+                    "LeaseDatabaseName is required. Please specify a database name for the lease collection.");
+            }
+            
+            string leaseCollectionName = ResolveAttributeValue(attribute.LeaseCollectionName);
+            if (string.IsNullOrEmpty(leaseCollectionName))
+            {
+                throw new InvalidOperationException(
+                    "LeaseCollectionName is required. Please specify a collection name for the lease collection.");
+            }
             
             reference.leaseClient = _configProvider.GetService(leaseConnectionString);
-            reference.leaseDatabaseName = ResolveAttributeValue(attribute.LeaseDatabaseName) ?? attribute.LeaseDatabaseName;
-            reference.leaseCollectionName = ResolveAttributeValue(attribute.LeaseCollectionName) ?? attribute.LeaseCollectionName;
+            reference.leaseDatabaseName = leaseDatabaseName;
+            reference.leaseCollectionName = leaseCollectionName;
             
             return
                 Task.FromResult<ITriggerBinding>(new CosmosDBMongoTriggerBinding(context.Parameter,

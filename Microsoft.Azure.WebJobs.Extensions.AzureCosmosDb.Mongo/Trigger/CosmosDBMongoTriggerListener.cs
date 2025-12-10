@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using Microsoft.Azure.WebJobs.Host.Executors;
@@ -62,7 +62,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                 this._triggerLevel = MonitorLevel.Collection;
             }
             
-            // Initialize lease collection manager (always required)
+            // Initialize lease collection manager
             if (_reference.leaseClient == null || string.IsNullOrEmpty(_reference.leaseDatabaseName) || string.IsNullOrEmpty(_reference.leaseCollectionName))
             {
                 throw new ArgumentException("Lease collection properties are required but not configured.", nameof(reference));
@@ -221,8 +221,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                         {
                             try
                             {
-                                // Serialize change event to BsonDocument
-                                var changeEventBson = change.ToBsonDocument();
+                                // BackingDocument is the raw BsonDocument of the change event
+                                var changeEventBson = change.BackingDocument;
 
                                 // Capture current time for consistency
                                 var now = DateTime.UtcNow;
@@ -347,8 +347,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                     {
                         try
                         {
-                            // Deserialize change event
-                            var changeEvent = BsonSerializer.Deserialize<ChangeStreamDocument<BsonDocument>>(leaseDocument.ChangeEvent);
+                            // Reconstruct ChangeStreamDocument from the stored BsonDocument
+                            var documentSerializer = BsonSerializer.LookupSerializer<BsonDocument>();
+                            var changeEvent = new ChangeStreamDocument<BsonDocument>(leaseDocument.ChangeEvent, documentSerializer);
 
                             // Process the change
                             lock (_metricsLock)
@@ -366,7 +367,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                                 var result = await this._executor.TryExecuteAsync(triggerData, this._cancellationTokenSource.Token);
                                 if (!result.Succeeded)
                                 {
-                                    _logger.LogWarning($"Consumer {workerId}: Function execution failed for document {changeEvent.DocumentKey}: {result.Exception}");
+                                    var documentKey = changeEvent?.DocumentKey?.ToString() ?? "unknown";
+                                    _logger.LogWarning($"Consumer {workerId}: Function execution failed for document {documentKey}: {result.Exception}");
                                 }
                             }
                             finally
