@@ -19,11 +19,27 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             CosmosDBMongoTriggerMetadata cosmosDBMongoTriggerMetadata = JsonConvert.DeserializeObject<CosmosDBMongoTriggerMetadata>(triggerMetadata.Metadata.ToString());
 
             ILoggerFactory loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+            var configProvider = serviceProvider.GetService<CosmosDBMongoConfigProvider>();
+            
+            // Resolve connection string from setting name
+            string leaseConnectionString = configProvider.ResolveConnectionString(cosmosDBMongoTriggerMetadata.LeaseConnectionStringSetting);
+            var leaseClient = configProvider.GetService(leaseConnectionString);
+            
+            var leaseCollectionManager = new LeaseCollectionManager(
+                leaseClient,
+                cosmosDBMongoTriggerMetadata.LeaseDatabaseName,
+                cosmosDBMongoTriggerMetadata.LeaseCollectionName,
+                loggerFactory.CreateLogger<LeaseCollectionManager>());
+
+            // Initialize lease collection manager
+            leaseCollectionManager.InitializeAsync().GetAwaiter().GetResult(); 
+
             _scaleMonitor = new CosmosDBMongoScaleMonitor(
                 cosmosDBMongoTriggerMetadata.FunctionName,
                 cosmosDBMongoTriggerMetadata.DatabaseName,
                 cosmosDBMongoTriggerMetadata.CollectionName,
                 loggerFactory,
+                leaseCollectionManager,
                 maxWorkPerInstance: cosmosDBMongoTriggerMetadata.MaxWorkPerInstance,
                 minSampleCount: cosmosDBMongoTriggerMetadata.MinSampleCount);
             _targetScaler = new CosmosDBMongoTargetScaler(
@@ -31,6 +47,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                 cosmosDBMongoTriggerMetadata.DatabaseName,
                 cosmosDBMongoTriggerMetadata.CollectionName,
                 loggerFactory,
+                leaseCollectionManager,
                 maxWorkPerInstance: cosmosDBMongoTriggerMetadata.MaxWorkPerInstance,
                 maxWorkInstance: cosmosDBMongoTriggerMetadata.MaxInstanceCount);
         }
@@ -55,6 +72,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 
             [JsonProperty]
             public string CollectionName { get; set; } = string.Empty;
+
+            [JsonProperty]
+            public string LeaseConnectionStringSetting { get; set; }
+
+            [JsonProperty]
+            public string LeaseDatabaseName { get; set; }
+
+            [JsonProperty]
+            public string LeaseCollectionName { get; set; }
 
             public int MaxWorkPerInstance { get; set; } = 1000;
             public int MaxInstanceCount { get; set; } = 3;

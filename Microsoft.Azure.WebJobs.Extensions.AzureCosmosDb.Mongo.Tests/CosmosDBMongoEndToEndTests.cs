@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using Microsoft.Extensions.DependencyInjection;
@@ -138,7 +138,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Tests
         public class TestFunctions
         {
             public static void Trigger(
-                [CosmosDBMongoTrigger(DatabaseName, CollectionName, ConnectionStringSetting = "CosmosDBMongoReal")] ChangeStreamDocument<BsonDocument> doc,
+                [CosmosDBMongoTrigger(DatabaseName, CollectionName, ConnectionStringSetting = "CosmosDBMongoReal", LeaseDatabaseName = DatabaseName, LeaseCollectionName = "leases")] ChangeStreamDocument<BsonDocument> doc,
                 ILogger logger)
             {
                 logger.LogInformation(DateTime.Now.ToString());

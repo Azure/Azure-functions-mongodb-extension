@@ -25,6 +25,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             string databaseName,
             string collectionName,
             ILoggerFactory loggerFactory,
+            LeaseCollectionManager leaseCollectionManager,
             int maxWorkPerInstance = 1000,
             int maxWorkInstance = 3
             )
@@ -32,7 +33,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             this._functionId = functionName;
             this._databaseName = databaseName;
             this._collectionName = collectionName;
-            this._cosmosDBMongoMetricsProvider = new CosmosDBMongoMetricsProvider(this._functionId, this._databaseName, this._collectionName, loggerFactory);
+            this._cosmosDBMongoMetricsProvider = new CosmosDBMongoMetricsProvider(this._functionId, this._databaseName, this._collectionName, loggerFactory, leaseCollectionManager);
             this._targetScalerDescriptor = new TargetScalerDescriptor(_functionId);
             this._maxWorkPerInstance = maxWorkPerInstance;
             this._maxWorkInstance = maxWorkInstance;
