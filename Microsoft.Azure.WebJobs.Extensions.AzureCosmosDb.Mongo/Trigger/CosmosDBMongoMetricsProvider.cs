@@ -59,12 +59,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             }
         }
 
-        public Task<CosmosDBMongoTriggerMetrics[]> GetMetricsHistoryAsync()
-        {
-            var metricsHistory = CosmosDBMongoMetricsStore.GetMetricsHistory(_functionId, _databaseName, _collectionName);
-            return Task.FromResult(metricsHistory);
-        }
-
         public async Task<long> GetLatestPendingWorkCountAsync()
         {
             var metrics = await GetMetricsAsync();

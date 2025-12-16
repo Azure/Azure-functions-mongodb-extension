@@ -24,8 +24,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         private IChangeStreamCursor<ChangeStreamDocument<BsonDocument>> _cursor;
         private CancellationTokenSource _cancellationTokenSource;
         private bool _disposed = false;
-        private CosmosDBMongoTriggerMetrics _currentMetrics;
-        private readonly object _metricsLock = new object();
         private BsonDocument _resumeToken;
         private readonly object _resumeTokenLock = new object();
         private readonly object _cursorLock = new object();
@@ -47,7 +45,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             this._reference = reference;
             this._logger = logger;
             this._cancellationTokenSource = new CancellationTokenSource();
-            this._currentMetrics = new CosmosDBMongoTriggerMetrics();
 
             if (string.IsNullOrEmpty(this._reference.databaseName))
             {
@@ -351,13 +348,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                             var documentSerializer = BsonSerializer.LookupSerializer<BsonDocument>();
                             var changeEvent = new ChangeStreamDocument<BsonDocument>(leaseDocument.ChangeEvent, documentSerializer);
 
-                            // Process the change
-                            lock (_metricsLock)
-                            {
-                                _currentMetrics.PendingEventsCount++;
-                                CosmosDBMongoMetricsStore.AddMetrics(_reference.functionId, _reference.databaseName, _reference.collectionName, _currentMetrics);
-                            }
-
                             try
                             {
                                 var triggerData = new TriggeredFunctionData
@@ -373,11 +363,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                             }
                             finally
                             {
-                                lock (_metricsLock)
-                                {
-                                    _currentMetrics.PendingEventsCount--;
-                                    CosmosDBMongoMetricsStore.AddMetrics(_reference.functionId, _reference.databaseName, _reference.collectionName, _currentMetrics);
-                                }
                             }
                         }
                         catch (Exception parseEx)
