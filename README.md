@@ -4,7 +4,86 @@ This repo contains binding extensions for the Azure WebJobs SDK intended for wor
 
 ## MongoDB Api
 
-To configure the binding, add the Mongo connection string as an app setting or environment variable. The name of the setting can be changed with the `ConnectionStringSetting` property of the binding attribute. An example of usage is [here](/Azure-functions-mongodb-extension/Sample/Sample.cs).
+### Authentication
+
+The extension supports multiple authentication methods:
+
+#### Connection String (Traditional)
+
+Add the MongoDB connection string as an app setting or environment variable:
+
+```json
+{
+  "CosmosDBMongo": "mongodb://account:key@host:10255/?ssl=true"
+}
+```
+
+Or using ConnectionStrings section:
+
+```json
+{
+  "ConnectionStrings": {
+    "CosmosDBMongo": "mongodb://account:key@host:10255/?ssl=true"
+  }
+}
+```
+
+#### Azure Entra ID with Managed Identity (Recommended)
+
+For enhanced security, use Azure Entra ID authentication with Managed Identity:
+
+**System-assigned Managed Identity:**
+
+```json
+{
+  "CosmosDBMongo": {
+    "accountEndpoint": "myaccount.mongo.cosmos.azure.com:10255"
+  }
+}
+```
+
+**User-assigned Managed Identity:**
+
+```json
+{
+  "CosmosDBMongo": {
+    "accountEndpoint": "myaccount.mongo.cosmos.azure.com:10255",
+    "credential": "managedidentity",
+    "clientId": "<user-assigned-identity-client-id>"
+  }
+}
+```
+
+**Service Principal:**
+
+```json
+{
+  "CosmosDBMongo": {
+    "accountEndpoint": "myaccount.mongo.cosmos.azure.com:10255",
+    "credential": "serviceprincipal",
+    "clientId": "<service-principal-client-id>",
+    "clientSecret": "<service-principal-secret>",
+    "tenantId": "<tenant-id>"
+  }
+}
+```
+
+**Local Development with DefaultAzureCredential:**
+
+For local development, the extension supports DefaultAzureCredential which tries multiple authentication methods:
+
+```json
+{
+  "CosmosDBMongo": {
+    "accountEndpoint": "myaccount.mongo.cosmos.azure.com:10255"
+  }
+}
+```
+
+Then authenticate locally using Azure CLI:
+```bash
+az login
+```
 
 ### Output Binding
 
@@ -13,7 +92,7 @@ In this example, the `item` object is upserted into the `ItemCollection` collect
 ```csharp
 public static void OutputBindingRun(
    [TimerTrigger("*/5 * * * * *")] TimerInfo myTimer,
-   [CosmosDBMongo(ItemDb, ItemCollection, ConnectionStringSetting = connStr)] out TestClass newItem,
+   [CosmosDBMongo(ItemDb, ItemCollection, ConnectionStringSetting = "CosmosDBMongo")] out TestClass newItem,
    ILogger log)
 {
     newItem = new TestClass()
@@ -31,7 +110,7 @@ You can get the documents from a collection with query
 ```csharp
 public static void InputBindingRun(
     [TimerTrigger("*/5 * * * * *")] TimerInfo myTimer,
-    [CosmosDBMongo(db, col, ConnectionStringSetting = connStr,
+    [CosmosDBMongo(db, col, ConnectionStringSetting = "CosmosDBMongo",
     QueryString = query)] List<BsonDocument> docs,
     ILogger log)
 {
@@ -49,7 +128,7 @@ The trigger sets up a [change stream pipeline](https://learn.microsoft.com/en-us
 
 ```csharp
 public static void TriggerRun(
-   [CosmosDBMongoTrigger(db, col, ConnectionStringSetting = connStr)] ChangeStreamDocument<BsonDocument> doc,
+   [CosmosDBMongoTrigger(db, col, ConnectionStringSetting = "CosmosDBMongo")] ChangeStreamDocument<BsonDocument> doc,
    ILogger log)
 {
     log.LogInformation(doc.FullDocument.ToString());
