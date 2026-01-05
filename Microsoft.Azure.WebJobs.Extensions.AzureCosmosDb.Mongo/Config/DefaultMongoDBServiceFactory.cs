@@ -27,12 +27,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Config
 
         /// <summary>
         /// Creates a MongoClient based on the connection configuration.
+        /// Note: The parameter is named 'connectionString' for backward compatibility with the interface,
+        /// but it accepts either a connection string directly or a connection configuration name/key.
         /// </summary>
-        /// <param name="connectionName">The connection configuration name/key.</param>
+        /// <param name="connectionString">Either a MongoDB connection string or a connection configuration name/key.</param>
         /// <returns>An IMongoClient instance.</returns>
-        public IMongoClient CreateClient(string connectionName)
+        public IMongoClient CreateClient(string connectionString)
         {
-            var connectionInfo = ResolveConnectionInformation(connectionName);
+            var connectionInfo = ResolveConnectionInformation(connectionString);
 
             MongoClientSettings settings;
 
@@ -98,10 +100,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Config
 
         /// <summary>
         /// Creates MongoClientSettings from token credential for Entra ID authentication.
+        /// 
+        /// Note: This implementation obtains the access token synchronously during client creation.
+        /// The token is embedded in the MongoDB credential and won't refresh automatically.
+        /// For long-running connections where token expiration (typically 1 hour) is a concern,
+        /// a future enhancement could implement MongoDB's authentication callback mechanism
+        /// to refresh tokens as needed.
         /// </summary>
         private MongoClientSettings CreateSettingsFromCredential(string accountEndpoint, TokenCredential credential)
         {
             // Get an access token for Azure Cosmos DB
+            // Using CancellationToken.None is acceptable here since this is only called during
+            // client creation, which is a one-time initialization operation per client instance.
             var tokenRequestContext = new TokenRequestContext(
                 new[] { "https://cosmos.azure.com/.default" });
             
