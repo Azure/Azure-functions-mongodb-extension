@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>net8.0;netstandard2.0</TargetFrameworks>
     <PackageId>Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo</PackageId>
-    <Version>1.1.2-preview</Version>
+    <Version>1.2.0-preview</Version>
     <Description>Azure CosmosDB Mongo extensions for .NET isolated functions</Description>
     <PackageTags>MongoDB;AzureFunctions</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -25,6 +25,9 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Azure.WebJobs" Version="3.0.41" />
+    <PackageReference Include="Microsoft.Extensions.Azure" Version="1.7.5" />
+    <PackageReference Include="Azure.Core" Version="1.42.0" />
+    <PackageReference Include="Azure.Identity" Version="1.12.0" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">

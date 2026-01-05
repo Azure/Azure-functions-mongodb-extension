@@ -54,17 +54,17 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             bindingRule.WhenIsNull(nameof(CosmosDBMongoAttribute.DatabaseName))
                 .BindToInput(attribute =>
                 {
-                    return _cosmosdbMongoBindingCollectorFactory.CreateClient(ResolveConnectionString(attribute.ConnectionStringSetting));
+                    return _cosmosdbMongoBindingCollectorFactory.CreateClient(attribute.ConnectionStringSetting);
                 });
             bindingRule.WhenIsNull(nameof(CosmosDBMongoAttribute.CollectionName)).WhenIsNotNull(nameof(CosmosDBMongoAttribute.DatabaseName))
                 .BindToInput(attribute =>
                 {
-                    return _cosmosdbMongoBindingCollectorFactory.CreateClient(ResolveConnectionString(attribute.ConnectionStringSetting)).GetDatabase(attribute.DatabaseName);
+                    return _cosmosdbMongoBindingCollectorFactory.CreateClient(attribute.ConnectionStringSetting).GetDatabase(attribute.DatabaseName);
                 });
             bindingRule.WhenIsNotNull(nameof(CosmosDBMongoAttribute.CollectionName)).WhenIsNotNull(nameof(CosmosDBMongoAttribute.DatabaseName))
                 .BindToInput(attribute =>
                 {
-                    return _cosmosdbMongoBindingCollectorFactory.CreateClient(ResolveConnectionString(attribute.ConnectionStringSetting))
+                    return _cosmosdbMongoBindingCollectorFactory.CreateClient(attribute.ConnectionStringSetting)
                         .GetDatabase(attribute.DatabaseName)
                         .GetCollection<BsonDocument>(attribute.CollectionName);
                 });
@@ -89,11 +89,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 
         internal void ValidateConnection(CosmosDBMongoAttribute attribute, Type paramType)
         {
-            if (string.IsNullOrEmpty(ResolveConnectionString(attribute.ConnectionStringSetting)))
+            if (string.IsNullOrEmpty(attribute.ConnectionStringSetting))
             {
                 string attributeProperty = $"{nameof(CosmosDBMongoAttribute)}.{nameof(CosmosDBMongoAttribute.ConnectionStringSetting)}";
                 throw new InvalidOperationException(
-                    $"Connection string must be set via the {attributeProperty} property.");
+                    $"Connection must be set via the {attributeProperty} property.");
             }
         }
 
@@ -115,7 +115,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         internal MongoCollectionReference ResolveCollectionReference(CosmosDBMongoAttribute attribute)
         {
             return new MongoCollectionReference(
-                GetService(ResolveConnectionString(attribute.ConnectionStringSetting)),
+                GetService(attribute.ConnectionStringSetting),
                 attribute.DatabaseName,
                 attribute.CollectionName);
         }

@@ -1,7 +1,9 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
+using Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Config;
 using Microsoft.Azure.WebJobs.Host.Scale;
+using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
@@ -18,10 +20,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                 throw new ArgumentNullException(nameof(builder));
             }
 
+            // Add Azure component factory for Entra ID authentication support
+            builder.Services.AddAzureClientsCore();
+
             builder.AddExtension<CosmosDBMongoConfigProvider>();
             builder.Services.TryAddSingleton<CosmosDBMongoConfigProvider>();
 
-            builder.Services.AddSingleton<ICosmosDBMongoBindingCollectorFactory, CosmosDBMongoBindingCollectorFactory>();
+            // Register the new factory that supports both connection strings and Entra ID
+            builder.Services.TryAddSingleton<ICosmosDBMongoBindingCollectorFactory, DefaultMongoDBServiceFactory>();
 
             return builder;
         }

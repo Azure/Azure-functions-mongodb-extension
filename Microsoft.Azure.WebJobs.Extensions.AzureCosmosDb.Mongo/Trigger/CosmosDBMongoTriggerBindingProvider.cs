@@ -34,22 +34,22 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                 return Task.FromResult<ITriggerBinding>(null);
             }
             
-            string connectionString = _configProvider.ResolveConnectionString(attribute.ConnectionStringSetting);
+            string connectionName = attribute.ConnectionStringSetting;
             string functionId = context.Parameter.Member.Name;
             
             string databaseName = ResolveAttributeValue(attribute.DatabaseName);
             string collectionName = ResolveAttributeValue(attribute.CollectionName);
             
             var reference = new MongoCollectionReference(
-                        _configProvider.GetService(connectionString),
+                        _configProvider.GetService(connectionName),
                         databaseName,
                         collectionName);
             reference.functionId = functionId;
             
-            // Resolve lease connection string (defaults to monitored cluster connection string)
-            string leaseConnectionString = string.IsNullOrEmpty(attribute.LeaseConnectionStringSetting)
-                ? connectionString
-                : _configProvider.ResolveConnectionString(attribute.LeaseConnectionStringSetting);
+            // Resolve lease connection (defaults to monitored cluster connection)
+            string leaseConnectionName = string.IsNullOrEmpty(attribute.LeaseConnectionStringSetting)
+                ? connectionName
+                : attribute.LeaseConnectionStringSetting;
             string leaseDatabaseName = ResolveAttributeValue(attribute.LeaseDatabaseName);
             if (string.IsNullOrEmpty(leaseDatabaseName))
             {
@@ -64,7 +64,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                     "LeaseCollectionName is required. Please specify a collection name for the lease collection.");
             }
             
-            reference.leaseClient = _configProvider.GetService(leaseConnectionString);
+            reference.leaseClient = _configProvider.GetService(leaseConnectionName);
             reference.leaseConnectionStringSetting = string.IsNullOrEmpty(attribute.LeaseConnectionStringSetting) 
                 ? attribute.ConnectionStringSetting 
                 : attribute.LeaseConnectionStringSetting;
