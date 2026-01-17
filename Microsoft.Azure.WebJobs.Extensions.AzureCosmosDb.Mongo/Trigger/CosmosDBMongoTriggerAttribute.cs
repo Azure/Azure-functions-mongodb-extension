@@ -60,7 +60,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         /// The name of the collection to which the parameter applies. 
         /// May include binding parameters.
         /// </summary>
-        public string CollectionName { get; set; } = string.Empty ;
+        public string CollectionName { get; set; } = string.Empty;
 
         /// <summary>
         /// Optional.
@@ -73,7 +73,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         /// A string value indicating the app setting to use as the CosmosDB connection string.
         /// </summary>
         public string ConnectionStringSetting { get; set; }
-
 
         /// <summary>
         /// The monitored level of trigger
@@ -95,6 +94,35 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         /// If not specified, defaults to the monitored cluster connection string.
         /// </summary>
         public string LeaseConnectionStringSetting { get; set; }
+
+        /// <summary>
+        /// Gets or sets the authentication method to connect to cluster.
+        /// Could be NativeAuth (default) or MicrosoftEntraID.
+        /// </summary>
+        public AuthMethod AuthMethod { get; set; } = AuthMethod.NativeAuth;
+
+        /// <summary>
+        /// Gets or sets the Azure AD tenant ID for Entra ID authentication.
+        /// </summary>
+        public string TenantId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the client ID for User-assigned Managed Identity.
+        /// Leave empty to use System-assigned Managed Identity.
+        /// </summary>
+        public string ManagedIdentityClientId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Application (Client) ID for Service Principal authentication.
+        /// Must be used together with ClientSecretSetting.
+        /// </summary>
+        public string ClientId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the app setting name containing the Client Secret for Service Principal authentication.
+        /// Must be used together with ClientId.
+        /// </summary>
+        public string ClientSecretSetting { get; set; }
     }
 
     public class CosmosDBMongoTriggerContext

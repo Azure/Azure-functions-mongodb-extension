@@ -89,6 +89,37 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         /// </summary>
         [AutoResolve]
         public string QueryString { get; set; }
+
+        /// <summary>
+        /// Gets or sets the authentication method to connect to cluster.
+        /// Could be NativeAuth (default) or MicrosoftEntraID.
+        /// </summary>
+        public AuthMethod AuthMethod { get; set; } = AuthMethod.NativeAuth;
+
+        /// <summary>
+        /// Gets or sets the Azure AD tenant ID for Entra ID authentication.
+        /// </summary>
+        [AutoResolve]
+        public string TenantId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the client ID for User-assigned Managed Identity.
+        /// </summary>
+        [AutoResolve]
+        public string ManagedIdentityClientId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Application ID for Service Principal authentication.
+        /// Must be used together with ClientSecretSetting.
+        /// </summary>
+        [AutoResolve]
+        public string ClientId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Client Secret for Service Principal authentication.
+        /// Must be used together with ClientId.
+        /// </summary>
+        public string ClientSecretSetting { get; set; }
     }
 
     public class CosmosDBMongoContext
