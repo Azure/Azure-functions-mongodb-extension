@@ -14,13 +14,8 @@ namespace Sample
 {
     public static class Sample
     {
-        #region Entra ID Authentication Samples
+        #region Entra ID Authentication Sample
 
-        /// <summary>
-        /// Sample 1: Entra ID with System-assigned Managed Identity (or local dev credentials)
-        /// - In Azure: Uses the Function App's System-assigned Managed Identity
-        /// - Locally: Uses Visual Studio, Azure CLI, or other DefaultAzureCredential sources
-        /// </summary>
         [FunctionName("EntraIdAuthSample")]
         public static void EntraIdAuthRun(
             [TimerTrigger("*/30 * * * * *")] TimerInfo myTimer,
@@ -30,7 +25,7 @@ namespace Sample
                 TenantId = "%TenantId%")] IMongoClient client,
             ILogger log)
         {
-            log.LogInformation($"Entra ID Auth Sample (System MI) executed at: {DateTime.Now}");
+            log.LogInformation($"Entra ID Auth Sample executed at: {DateTime.Now}");
 
             try
             {
@@ -55,71 +50,10 @@ namespace Sample
             }
         }
 
-        /// <summary>
-        /// Sample 2: Entra ID with User-assigned Managed Identity
-        /// - Requires ManagedIdentityClientId to be set to the Client ID of the User-assigned MI
-        /// - Useful when you have multiple identities or need cross-subscription access
-        /// </summary>
-        [FunctionName("EntraIdUserAssignedMISample")]
-        public static void EntraIdUserAssignedMIRun(
-            [TimerTrigger("0 */5 * * * *")] TimerInfo myTimer, // Every 5 minutes
-            [CosmosDBMongo(
-                ConnectionStringSetting = "EntraIdConnection",
-                AuthMethod = AuthMethod.MicrosoftEntraID,
-                TenantId = "%TenantId%",
-                ManagedIdentityClientId = "%ManagedIdentityClientId%")] IMongoClient client,
-            ILogger log)
-        {
-            log.LogInformation($"Entra ID Auth Sample (User-assigned MI) executed at: {DateTime.Now}");
-
-            try
-            {
-                var databases = client.ListDatabaseNames().ToList();
-                log.LogInformation($"Connected via User-assigned MI. Found {databases.Count} database(s).");
-            }
-            catch (Exception ex)
-            {
-                log.LogError(ex, "Failed to connect with User-assigned Managed Identity");
-            }
-        }
-
-        /// <summary>
-        /// Sample 3: Entra ID with Service Principal (Client ID + Client Secret)
-        /// - Requires ClientId (Application ID) and ClientSecretSetting
-        /// - ClientSecretSetting points to an app setting containing the secret
-        /// - Useful for automated scenarios, CI/CD, or cross-tenant access
-        /// </summary>
-        [FunctionName("EntraIdServicePrincipalSample")]
-        public static void EntraIdServicePrincipalRun(
-            [TimerTrigger("0 */5 * * * *")] TimerInfo myTimer, // Every 5 minutes
-            [CosmosDBMongo(
-                ConnectionStringSetting = "EntraIdConnection",
-                AuthMethod = AuthMethod.MicrosoftEntraID,
-                TenantId = "%TenantId%",
-                ClientId = "%ServicePrincipalClientId%",
-                ClientSecretSetting = "ServicePrincipalClientSecret")] IMongoClient client,
-            ILogger log)
-        {
-            log.LogInformation($"Entra ID Auth Sample (Service Principal) executed at: {DateTime.Now}");
-
-            try
-            {
-                var databases = client.ListDatabaseNames().ToList();
-                log.LogInformation($"Connected via Service Principal. Found {databases.Count} database(s).");
-            }
-            catch (Exception ex)
-            {
-                log.LogError(ex, "Failed to connect with Service Principal");
-            }
-        }
-
         #endregion
 
         #region Client Binding Samples
 
-        /// <summary>
-        /// Sample: Get MongoClient with native authentication (default)
-        /// </summary>
         [FunctionName("ClientBindingSample")]
         public static void ClientBindingRun(
             [TimerTrigger("*/5 * * * * *")] TimerInfo myTimer,
@@ -136,13 +70,7 @@ namespace Sample
                 log.LogInformation(d.ToString());
             }
         }
-
-        /// <summary>
-        /// Sample: Get MongoClient with Microsoft Entra ID authentication
-        /// Requires .NET 8.0 or later
-        /// Connection string should NOT contain username/password
-        /// e.g., "mongodb+srv://your-cluster.mongocluster.cosmos.azure.com/?tls=true"
-        /// </summary>
+        
         [FunctionName("ClientBindingWithEntraIdSample")]
         public static void ClientBindingWithEntraIdRun(
             [TimerTrigger("*/30 * * * * *")] TimerInfo myTimer,
@@ -174,9 +102,6 @@ namespace Sample
 
         #region Output Binding Samples
 
-        /// <summary>
-        /// Sample: Output binding to insert documents
-        /// </summary>
         [FunctionName("OutputBindingSample")]
         public static async Task OutputBindingRun(
             [TimerTrigger("*/5 * * * * *")] TimerInfo myTimer,
@@ -195,9 +120,6 @@ namespace Sample
             await collector.AddAsync(item);
         }
 
-        /// <summary>
-        /// Sample: Output binding with Entra ID authentication
-        /// </summary>
         [FunctionName("OutputBindingWithEntraIdSample")]
         public static async Task OutputBindingWithEntraIdRun(
             [TimerTrigger("*/30 * * * * *")] TimerInfo myTimer,
@@ -222,9 +144,6 @@ namespace Sample
 
         #region Input Binding Samples
 
-        /// <summary>
-        /// Sample: Input binding to query documents
-        /// </summary>
         [FunctionName("InputBindingSample")]
         public static void InputBindingRun(
             [TimerTrigger("*/5 * * * * *")] TimerInfo myTimer,
@@ -241,13 +160,28 @@ namespace Sample
             }
         }
 
+        [FunctionName("InputBindingWithEntraIdSample")]
+        public static void InputBindingWithEntraIdRun(
+            [TimerTrigger("*/30 * * * * *")] TimerInfo myTimer,
+            [CosmosDBMongo("%DatabaseName%", "%CollectionName%",
+                ConnectionStringSetting = "EntraIdConnection",
+                AuthMethod = AuthMethod.MicrosoftEntraID,
+                TenantId = "%TenantId%",
+                QueryString = "%QueryString%")] List<BsonDocument> docs,
+            ILogger log)
+        {
+            log.LogInformation($"Input binding with Entra ID executed at: {DateTime.Now}");
+
+            foreach (var doc in docs)
+            {
+                log.LogInformation(doc.ToString());
+            }
+        }
+
         #endregion
 
         #region Trigger Samples
 
-        /// <summary>
-        /// Sample: Change stream trigger to monitor collection changes
-        /// </summary>
         [FunctionName("TriggerSample")]
         public static void TriggerRun(
             [CosmosDBMongoTrigger("TestDatabase", "TestCollection",

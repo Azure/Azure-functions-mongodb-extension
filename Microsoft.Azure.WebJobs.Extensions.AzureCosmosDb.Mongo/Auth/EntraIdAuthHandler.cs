@@ -43,10 +43,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Auth
 
         /// <summary>
         /// Creates a new Entra ID auth handler with a custom TokenCredential.
-        /// Use this for advanced scenarios.
         /// </summary>
-        /// <param name="credential">The token credential to use for authentication.</param>
-        /// <param name="tenantId">Optional Azure AD tenant ID.</param>
         public EntraIdAuthHandler(TokenCredential credential, string tenantId = null)
         {
             _customCredential = credential ?? throw new System.ArgumentNullException(nameof(credential));
