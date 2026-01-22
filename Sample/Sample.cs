@@ -90,12 +90,12 @@ namespace Sample
                     QueryString = "%QueryString%")] List<BsonDocument> docs,
             ILogger log)
         {
-        log.LogInformation($"Input binding sample executed at: {DateTime.Now}");
+            log.LogInformation($"Input binding sample executed at: {DateTime.Now}");
 
-        foreach (var doc in docs)
-        {
-            log.LogInformation(doc.ToString());
-        }
+            foreach (var doc in docs)
+            {
+                log.LogInformation(doc.ToString());
+            }
         }
 
         [FunctionName("TriggerSample")]
