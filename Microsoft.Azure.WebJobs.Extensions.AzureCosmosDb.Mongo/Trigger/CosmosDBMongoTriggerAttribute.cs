@@ -54,13 +54,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         /// The name of the database to which the parameter applies.
         /// May include binding parameters.
         /// </summary>
+        [AutoResolve]
         public string DatabaseName { get; set; } = string.Empty;
 
         /// <summary>
         /// The name of the collection to which the parameter applies. 
         /// May include binding parameters.
         /// </summary>
-        public string CollectionName { get; set; } = string.Empty ;
+        [AutoResolve]
+        public string CollectionName { get; set; } = string.Empty;
 
         /// <summary>
         /// Optional.
@@ -72,8 +74,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         /// <summary>
         /// A string value indicating the app setting to use as the CosmosDB connection string.
         /// </summary>
+        [AutoResolve]
         public string ConnectionStringSetting { get; set; }
-
 
         /// <summary>
         /// The monitored level of trigger
@@ -82,19 +84,76 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 
         /// <summary>
         /// Database name for the lease collection.
+        /// If not specified, defaults to the monitored database name.
         /// </summary>
+        [AutoResolve]
         public string LeaseDatabaseName { get; set; }
 
         /// <summary>
         /// Collection name for the lease collection.
+        /// If not specified, defaults to "leases".
         /// </summary>
+        [AutoResolve]
         public string LeaseCollectionName { get; set; }
 
         /// <summary>
         /// Connection string for the lease cluster.
         /// If not specified, defaults to the monitored cluster connection string.
         /// </summary>
+        [AutoResolve]
         public string LeaseConnectionStringSetting { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Azure AD tenant ID for Microsoft Entra ID authentication for the monitored cluster.
+        /// When specified, Entra ID authentication is used instead of native MongoDB authentication.
+        /// Requires .NET 8.0 or later.
+        /// May include binding parameters (e.g., "%TenantId%").
+        /// </summary>
+        [AutoResolve]
+        public string TenantId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the client ID for User-assigned Managed Identity for the monitored cluster.
+        /// Only used when TenantId is specified (Entra ID authentication).
+        /// Leave empty to use System-assigned Managed Identity.
+        /// May include binding parameters (e.g., "%ManagedIdentityClientId%").
+        /// </summary>
+        [AutoResolve]
+        public string ManagedIdentityClientId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Azure AD tenant ID for Microsoft Entra ID authentication for the lease cluster.
+        /// When specified, Entra ID authentication is used for the lease cluster.
+        /// If not specified and monitored cluster uses Entra ID (TenantId is set), 
+        /// the lease cluster will also use Entra ID with the same TenantId.
+        /// To use native auth for lease cluster when monitored uses Entra ID, 
+        /// use a separate connection string without specifying LeaseTenantId.
+        /// May include binding parameters (e.g., "%LeaseTenantId%").
+        /// </summary>
+        [AutoResolve]
+        public string LeaseTenantId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the client ID for User-assigned Managed Identity for the lease cluster.
+        /// Only used when LeaseTenantId is specified or inherited from TenantId.
+        /// If not specified, defaults to the monitored cluster's ManagedIdentityClientId.
+        /// May include binding parameters (e.g., "%LeaseManagedIdentityClientId%").
+        /// </summary>
+        [AutoResolve]
+        public string LeaseManagedIdentityClientId { get; set; }
+
+        // /// <summary>
+        // /// Gets or sets the Application (Client) ID for Service Principal authentication.
+        // /// Must be used together with ClientSecretSetting.
+        // /// </summary>
+        // [AutoResolve]
+        // public string ClientId { get; set; }
+
+        // /// <summary>
+        // /// Gets or sets the app setting name containing the Client Secret for Service Principal authentication.
+        // /// Must be used together with ClientId.
+        // /// </summary>
+        // public string ClientSecretSetting { get; set; }
     }
 
     public class CosmosDBMongoTriggerContext

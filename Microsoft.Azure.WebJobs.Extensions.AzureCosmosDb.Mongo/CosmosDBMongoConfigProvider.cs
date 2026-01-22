@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
+using Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Auth;
 using Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Binding;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Config;
@@ -54,25 +55,38 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             bindingRule.WhenIsNull(nameof(CosmosDBMongoAttribute.DatabaseName))
                 .BindToInput(attribute =>
                 {
-                    return _cosmosdbMongoBindingCollectorFactory.CreateClient(ResolveConnectionString(attribute.ConnectionStringSetting));
+                    return GetService(attribute);
                 });
             bindingRule.WhenIsNull(nameof(CosmosDBMongoAttribute.CollectionName)).WhenIsNotNull(nameof(CosmosDBMongoAttribute.DatabaseName))
                 .BindToInput(attribute =>
                 {
-                    return _cosmosdbMongoBindingCollectorFactory.CreateClient(ResolveConnectionString(attribute.ConnectionStringSetting)).GetDatabase(attribute.DatabaseName);
+                    return GetService(attribute).GetDatabase(attribute.DatabaseName);
                 });
             bindingRule.WhenIsNotNull(nameof(CosmosDBMongoAttribute.CollectionName)).WhenIsNotNull(nameof(CosmosDBMongoAttribute.DatabaseName))
                 .BindToInput(attribute =>
                 {
-                    return _cosmosdbMongoBindingCollectorFactory.CreateClient(ResolveConnectionString(attribute.ConnectionStringSetting))
+                    return GetService(attribute)
                         .GetDatabase(attribute.DatabaseName)
                         .GetCollection<BsonDocument>(attribute.CollectionName);
                 });
         }
 
+        private IMongoClient CreateClient(
+            string connectionStringSetting,
+            string tenantId,
+            string managedIdentityClientId)
+        {
+            var connectionString = ResolveConnectionString(connectionStringSetting);
+
+            return _cosmosdbMongoBindingCollectorFactory.CreateClient(
+                connectionString,
+                tenantId,
+                managedIdentityClientId);
+        }
+
         internal CosmosDBMongoTriggerContext CreateTriggerContext(CosmosDBMongoTriggerAttribute attribute)
         {
-            IMongoClient client = GetService(attribute.ConnectionStringSetting, attribute.DatabaseName, attribute.CollectionName);
+            IMongoClient client = GetService(attribute);
 
             return new CosmosDBMongoTriggerContext
             {
@@ -81,9 +95,37 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             };
         }
 
+        internal IMongoClient GetService(CosmosDBMongoTriggerAttribute attribute)
+        {
+            string cacheKey = BuildCacheKey(
+                attribute.ConnectionStringSetting, 
+                attribute.DatabaseName, 
+                attribute.CollectionName, 
+                attribute.TenantId,
+                attribute.ManagedIdentityClientId);
+            return CollectorCache.GetOrAdd(cacheKey, (c) => CreateClient(
+                attribute.ConnectionStringSetting,
+                attribute.TenantId,
+                attribute.ManagedIdentityClientId));
+        }
+
+        internal IMongoClient GetService(CosmosDBMongoAttribute attribute)
+        {
+            string cacheKey = BuildCacheKey(
+                attribute.ConnectionStringSetting, 
+                attribute.DatabaseName, 
+                attribute.CollectionName, 
+                attribute.TenantId,
+                attribute.ManagedIdentityClientId);
+            return CollectorCache.GetOrAdd(cacheKey, (c) => CreateClient(
+                attribute.ConnectionStringSetting,
+                attribute.TenantId,
+                attribute.ManagedIdentityClientId));
+        }
+
         internal IMongoClient GetService(string connectionString, string databaseName, string collectionName)
         {
-            string cacheKey = BuildCacheKey(connectionString, databaseName, collectionName);
+            string cacheKey = BuildCacheKey(connectionString, databaseName, collectionName, null, null);
             return CollectorCache.GetOrAdd(cacheKey, (c) => this._cosmosdbMongoBindingCollectorFactory.CreateClient(connectionString));
         }
 
@@ -107,15 +149,22 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             }
         }
 
-        internal IMongoClient GetService(string connection)
+        internal IMongoClient GetServiceWithAuth(
+            string connectionString,
+            string tenantId,
+            string managedIdentityClientId)
         {
-            return _cosmosdbMongoBindingCollectorFactory.CreateClient(connection);
+            string cacheKey = BuildCacheKey(connectionString, null, null, tenantId, managedIdentityClientId);
+            return CollectorCache.GetOrAdd(cacheKey, (c) => _cosmosdbMongoBindingCollectorFactory.CreateClient(
+                connectionString,
+                tenantId,
+                managedIdentityClientId));
         }
 
         internal MongoCollectionReference ResolveCollectionReference(CosmosDBMongoAttribute attribute)
         {
             return new MongoCollectionReference(
-                GetService(ResolveConnectionString(attribute.ConnectionStringSetting)),
+                GetService(attribute),
                 attribute.DatabaseName,
                 attribute.CollectionName);
         }
@@ -144,6 +193,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             return connection;
         }
 
-        private static string BuildCacheKey(string connectionString, string databaseName, string collectionName) => $"{connectionString}|{databaseName}|{collectionName}";
+        private static string BuildCacheKey(
+            string connectionString, 
+            string databaseName, 
+            string collectionName, 
+            string tenantId,
+            string managedIdentityClientId)
+            => $"{connectionString}|{databaseName}|{collectionName}|{tenantId ?? ""}|{managedIdentityClientId ?? ""}";
     }
 }

@@ -89,6 +89,37 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         /// </summary>
         [AutoResolve]
         public string QueryString { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Azure AD tenant ID for Microsoft Entra ID authentication.
+        /// When specified, Entra ID authentication is used instead of native MongoDB authentication.
+        /// Requires .NET 8.0 or later.
+        /// May include binding parameters (e.g., "%TenantId%").
+        /// </summary>
+        [AutoResolve]
+        public string TenantId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the client ID for User-assigned Managed Identity.
+        /// Only used when TenantId is specified (Entra ID authentication).
+        /// Leave empty to use System-assigned Managed Identity.
+        /// May include binding parameters (e.g., "%ManagedIdentityClientId%").
+        /// </summary>
+        [AutoResolve]
+        public string ManagedIdentityClientId { get; set; }
+
+        // /// <summary>
+        // /// Gets or sets the Client ID for Service Principal authentication.
+        // /// Must be used together with ClientSecretSetting.
+        // /// </summary>
+        // [AutoResolve]
+        // public string ClientId { get; set; }
+
+        // /// <summary>
+        // /// Gets or sets the Client Secret for Service Principal authentication.
+        // /// Must be used together with ClientId.
+        // /// </summary>
+        // public string ClientSecretSetting { get; set; }
     }
 
     public class CosmosDBMongoContext

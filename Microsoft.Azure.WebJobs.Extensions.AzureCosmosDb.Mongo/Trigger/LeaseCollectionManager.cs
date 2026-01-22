@@ -38,6 +38,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 
         /// <summary>
         /// Initializes the lease collection with proper indexes.
+        /// Creates the collection if it does not exist.
         /// </summary>
         public async Task InitializeAsync(CancellationToken cancellationToken = default)
         {
@@ -55,6 +56,25 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                 }
 
                 _leaseDatabase = _leaseClient.GetDatabase(_leaseDatabaseName);
+                
+                // Check if collection exists, create if not
+                var collectionNames = await _leaseDatabase.ListCollectionNamesAsync(cancellationToken: cancellationToken);
+                var collectionList = await collectionNames.ToListAsync(cancellationToken);
+                var exists = collectionList.Contains(_leaseCollectionName);
+                
+                if (!exists)
+                {
+                    try
+                    {
+                        await _leaseDatabase.CreateCollectionAsync(_leaseCollectionName, cancellationToken: cancellationToken);
+                        _logger.LogInformation($"Created lease collection '{_leaseCollectionName}' in database '{_leaseDatabaseName}'.");
+                    }
+                    catch (MongoCommandException ex) when (ex.CodeName == "NamespaceExists")
+                    {
+                        // Collection was created by another instance, ignore
+                    }
+                }
+                
                 _leaseCollection = _leaseDatabase.GetCollection<LeaseDocument>(_leaseCollectionName);
                 _initialized = true;
             }
