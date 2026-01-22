@@ -23,7 +23,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             
             // Resolve connection string from setting name
             string leaseConnectionString = configProvider.ResolveConnectionString(cosmosDBMongoTriggerMetadata.LeaseConnectionStringSetting);
-            var leaseClient = configProvider.GetService(leaseConnectionString);
+            
+            // Get lease client with auth (auto-detected from LeaseTenantId)
+            var leaseClient = configProvider.GetServiceWithAuth(
+                leaseConnectionString,
+                cosmosDBMongoTriggerMetadata.LeaseTenantId,
+                cosmosDBMongoTriggerMetadata.LeaseManagedIdentityClientId);
             
             var leaseCollectionManager = new LeaseCollectionManager(
                 leaseClient,
@@ -81,6 +86,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 
             [JsonProperty]
             public string LeaseCollectionName { get; set; }
+
+            [JsonProperty]
+            public string LeaseTenantId { get; set; }
+
+            [JsonProperty]
+            public string LeaseManagedIdentityClientId { get; set; }
 
             public int MaxWorkPerInstance { get; set; } = 1000;
             public int MaxInstanceCount { get; set; } = 3;

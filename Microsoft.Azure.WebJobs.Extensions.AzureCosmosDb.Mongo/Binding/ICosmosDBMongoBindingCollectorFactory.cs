@@ -1,7 +1,6 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
-using Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Auth;
 using MongoDB.Driver;
 
 namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
@@ -10,12 +9,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
     {
         IMongoClient CreateClient(string connectionString);
 
+        /// <summary>
+        /// Creates a MongoDB client with auto-detected authentication.
+        /// If tenantId is specified, uses Microsoft Entra ID authentication.
+        /// Otherwise, uses native MongoDB authentication.
+        /// </summary>
         IMongoClient CreateClient(
             string connectionString, 
-            AuthMethod authMethod, 
-            string tenantId = null, 
+            string tenantId, 
             string managedIdentityClientId = null);
-            // string clientId = null,
-            // string clientSecret = null);
     }
 }

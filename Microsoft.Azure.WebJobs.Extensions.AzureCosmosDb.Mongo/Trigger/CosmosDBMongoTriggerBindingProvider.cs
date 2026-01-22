@@ -44,8 +44,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             string databaseName = ResolveAttributeValue(attribute.DatabaseName);
             string collectionName = ResolveAttributeValue(attribute.CollectionName);
 
+            // Resolve authentication settings for monitored cluster
+            // Auth method is auto-detected: TenantId present = Entra ID, otherwise NativeAuth
+            string tenantId = ResolveAttributeValue(attribute.TenantId);
+            string managedIdentityClientId = ResolveAttributeValue(attribute.ManagedIdentityClientId);
+
             var reference = new MongoCollectionReference(
-                        _configProvider.GetService(connectionString),
+                        _configProvider.GetServiceWithAuth(
+                            connectionString,
+                            tenantId,
+                            managedIdentityClientId),
                         databaseName,
                         collectionName);
             reference.functionId = functionId;
@@ -69,12 +77,37 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                 leaseCollectionName = "leases";
             }
 
-            reference.leaseClient = _configProvider.GetService(leaseConnectionString);
+            // Resolve lease authentication settings
+            bool isSameCluster = string.IsNullOrEmpty(attribute.LeaseConnectionStringSetting) ||
+                                 attribute.LeaseConnectionStringSetting == attribute.ConnectionStringSetting;
+            
+            string leaseTenantId = ResolveAttributeValue(attribute.LeaseTenantId);
+            if (string.IsNullOrEmpty(leaseTenantId) && isSameCluster)
+            {
+                // Only inherit TenantId if using the same cluster
+                leaseTenantId = tenantId;
+            }
+            // If different cluster and LeaseTenantId not specified, leaseTenantId remains null
+            
+            string leaseManagedIdentityClientId = ResolveAttributeValue(attribute.LeaseManagedIdentityClientId);
+            if (string.IsNullOrEmpty(leaseManagedIdentityClientId) && isSameCluster)
+            {
+                // Only inherit ManagedIdentityClientId if using the same cluster
+                leaseManagedIdentityClientId = managedIdentityClientId;
+            }
+
+            // Create lease client with appropriate authentication (auto-detected from LeaseTenantId)
+            reference.leaseClient = _configProvider.GetServiceWithAuth(
+                leaseConnectionString,
+                leaseTenantId,
+                leaseManagedIdentityClientId);
             reference.leaseConnectionStringSetting = string.IsNullOrEmpty(attribute.LeaseConnectionStringSetting)
                 ? attribute.ConnectionStringSetting
                 : attribute.LeaseConnectionStringSetting;
             reference.leaseDatabaseName = leaseDatabaseName;
             reference.leaseCollectionName = leaseCollectionName;
+            reference.leaseTenantId = leaseTenantId;
+            reference.leaseManagedIdentityClientId = leaseManagedIdentityClientId;
 
             return
                 Task.FromResult<ITriggerBinding>(new CosmosDBMongoTriggerBinding(parameter,

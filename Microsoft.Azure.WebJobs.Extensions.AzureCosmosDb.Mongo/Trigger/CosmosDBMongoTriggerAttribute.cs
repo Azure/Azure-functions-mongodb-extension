@@ -104,23 +104,43 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         public string LeaseConnectionStringSetting { get; set; }
 
         /// <summary>
-        /// Gets or sets the authentication method to connect to cluster.
-        /// Could be NativeAuth (default) or MicrosoftEntraID.
-        /// </summary>
-        public AuthMethod AuthMethod { get; set; } = AuthMethod.NativeAuth;
-
-        /// <summary>
-        /// Gets or sets the Azure AD tenant ID for Entra ID authentication.
+        /// Gets or sets the Azure AD tenant ID for Microsoft Entra ID authentication for the monitored cluster.
+        /// When specified, Entra ID authentication is used instead of native MongoDB authentication.
+        /// Requires .NET 8.0 or later.
+        /// May include binding parameters (e.g., "%TenantId%").
         /// </summary>
         [AutoResolve]
         public string TenantId { get; set; }
 
         /// <summary>
-        /// Gets or sets the client ID for User-assigned Managed Identity.
+        /// Gets or sets the client ID for User-assigned Managed Identity for the monitored cluster.
+        /// Only used when TenantId is specified (Entra ID authentication).
         /// Leave empty to use System-assigned Managed Identity.
+        /// May include binding parameters (e.g., "%ManagedIdentityClientId%").
         /// </summary>
         [AutoResolve]
         public string ManagedIdentityClientId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Azure AD tenant ID for Microsoft Entra ID authentication for the lease cluster.
+        /// When specified, Entra ID authentication is used for the lease cluster.
+        /// If not specified and monitored cluster uses Entra ID (TenantId is set), 
+        /// the lease cluster will also use Entra ID with the same TenantId.
+        /// To use native auth for lease cluster when monitored uses Entra ID, 
+        /// use a separate connection string without specifying LeaseTenantId.
+        /// May include binding parameters (e.g., "%LeaseTenantId%").
+        /// </summary>
+        [AutoResolve]
+        public string LeaseTenantId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the client ID for User-assigned Managed Identity for the lease cluster.
+        /// Only used when LeaseTenantId is specified or inherited from TenantId.
+        /// If not specified, defaults to the monitored cluster's ManagedIdentityClientId.
+        /// May include binding parameters (e.g., "%LeaseManagedIdentityClientId%").
+        /// </summary>
+        [AutoResolve]
+        public string LeaseManagedIdentityClientId { get; set; }
 
         // /// <summary>
         // /// Gets or sets the Application (Client) ID for Service Principal authentication.

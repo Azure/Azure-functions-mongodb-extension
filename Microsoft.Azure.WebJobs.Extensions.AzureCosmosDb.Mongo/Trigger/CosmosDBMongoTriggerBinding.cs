@@ -62,7 +62,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                 CollectionName = _monitoredCollectionRef.collectionName,
                 LeaseConnectionStringSetting = _monitoredCollectionRef.leaseConnectionStringSetting,
                 LeaseDatabaseName = _monitoredCollectionRef.leaseDatabaseName,
-                LeaseCollectionName = _monitoredCollectionRef.leaseCollectionName
+                LeaseCollectionName = _monitoredCollectionRef.leaseCollectionName,
+                LeaseTenantId = _monitoredCollectionRef.leaseTenantId,
+                LeaseManagedIdentityClientId = _monitoredCollectionRef.leaseManagedIdentityClientId
             };
         }
 
@@ -74,6 +76,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             public string LeaseConnectionStringSetting { get; set; }
             public string LeaseDatabaseName { get; set; }
             public string LeaseCollectionName { get; set; }
+            public string LeaseTenantId { get; set; }
+            public string LeaseManagedIdentityClientId { get; set; }
 
             public override string GetTriggerReason(IDictionary<string, string> arguments)
             {

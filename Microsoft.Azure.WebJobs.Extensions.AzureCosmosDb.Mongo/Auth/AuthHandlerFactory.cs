@@ -8,33 +8,55 @@ using Azure.Core;
 
 namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Auth
 {
-    public static class AuthHandlerFactory
+    internal static class AuthHandlerFactory
     {
+        /// <summary>
+        /// Auto-detects authentication method based on TenantId presence.
+        /// If TenantId is specified, uses Microsoft Entra ID authentication.
+        /// Otherwise, uses native MongoDB authentication.
+        /// </summary>
+        /// <param name="tenantId">Azure AD tenant ID. If specified, Entra ID authentication is used.</param>
+        /// <param name="managedIdentityClientId">Optional client ID for User-assigned Managed Identity.</param>
+        /// <returns>An authentication handler.</returns>
+        public static IAuthHandler Create(
+            string tenantId = null, 
+            string managedIdentityClientId = null)
+        {
+            // Auto-detect: TenantId present = Entra ID, otherwise NativeAuth
+            AuthMethod authMethod = string.IsNullOrEmpty(tenantId) 
+                ? AuthMethod.NativeAuth 
+                : AuthMethod.MicrosoftEntraID;
+
+            return Create(authMethod, tenantId, managedIdentityClientId);
+        }
+
         /// <summary>
         /// Creates an auth handler based on the specified auth method.
         /// </summary>
         /// <param name="authMethod">The authentication method to use.</param>
-        /// <param name="tenantId">Optional Azure AD tenant ID (only used for MicrosoftEntraID).</param>
+        /// <param name="tenantId">Azure AD tenant ID (required for MicrosoftEntraID).</param>
         /// <param name="managedIdentityClientId">Optional client ID for User-assigned Managed Identity.</param>
-        // /// <param name="clientId">Optional Application (Client) ID for Service Principal authentication.</param>
-        // /// <param name="clientSecret">Optional Client Secret for Service Principal authentication.</param>
         /// <returns>An authentication handler.</returns>
-        public static IAuthHandler Create(
+        internal static IAuthHandler Create(
             AuthMethod authMethod, 
-            string tenantId = null, 
-            string managedIdentityClientId = null)
-            // string clientId = null,
-            // string clientSecret = null)
+            string tenantId, 
+            string managedIdentityClientId)
         {
             switch (authMethod)
             {
                 case AuthMethod.MicrosoftEntraID:
 #if NET8_0_OR_GREATER
+                    if (string.IsNullOrEmpty(tenantId))
+                    {
+                        throw new InvalidOperationException(
+                            "TenantId is required for Microsoft Entra ID authentication. " +
+                            "Please specify the TenantId property.");
+                    }
                     return new EntraIdAuthHandler(tenantId, managedIdentityClientId);
 #else
                     throw new PlatformNotSupportedException(
                         "Microsoft Entra ID authentication is only supported on .NET 8.0 or later. " +
-                        "Please use NativeAuth or upgrade to .NET 8.0.");
+                        "Please upgrade to .NET 8.0 or remove the TenantId property to use native authentication.");
 #endif
 
                 case AuthMethod.NativeAuth:
@@ -49,9 +71,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Auth
         /// Use this for advanced scenarios.
         /// </summary>
         /// <param name="credential">The token credential to use for authentication.</param>
-        /// <param name="tenantId">Optional Azure AD tenant ID.</param>
+        /// <param name="tenantId">Azure AD tenant ID.</param>
         /// <returns>An Entra ID authentication handler.</returns>
-        public static IAuthHandler CreateEntraId(TokenCredential credential, string tenantId = null)
+        internal static IAuthHandler CreateEntraId(TokenCredential credential, string tenantId)
         {
             return new EntraIdAuthHandler(credential, tenantId);
         }

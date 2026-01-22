@@ -18,6 +18,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         public string leaseConnectionStringSetting { get; set; }
         public string leaseDatabaseName { get; set; }
         public string leaseCollectionName { get; set; }
+        public string leaseTenantId { get; set; }
+        public string leaseManagedIdentityClientId { get; set; }
 
         public MongoCollectionReference(IMongoClient client, string databaseName, string collectionName, bool createIfNotExists = true)
         {

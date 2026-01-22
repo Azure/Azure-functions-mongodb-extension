@@ -10,7 +10,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Auth
 {
     /// <summary>
     /// Handler for Microsoft Entra ID authentication.
-    /// Supports System-assigned MI, User-assigned MI, Service Principal, and custom TokenCredential.
+    /// Supports System-assigned MI, User-assigned MI, and custom TokenCredential.
     /// </summary>
     public class EntraIdAuthHandler : IAuthHandler
     {

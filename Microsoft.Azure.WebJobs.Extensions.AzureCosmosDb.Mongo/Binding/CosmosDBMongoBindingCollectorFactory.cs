@@ -11,23 +11,21 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
     {
         public IMongoClient CreateClient(string connectionString)
         {
-            return CreateClient(connectionString, AuthMethod.NativeAuth);
+            return CreateClient(connectionString, tenantId: null);
         }
 
         public IMongoClient CreateClient(
             string connectionString, 
-            AuthMethod authMethod, 
-            string tenantId = null, 
+            string tenantId, 
             string managedIdentityClientId = null)
-            // string clientId = null,
-            // string clientSecret = null)
         {
             if (string.IsNullOrEmpty(connectionString))
             {
                 throw new ArgumentNullException(nameof(connectionString));
             }
 
-            var authHandler = AuthHandlerFactory.Create(authMethod, tenantId, managedIdentityClientId);
+            // Auth method is auto-detected: TenantId present = Entra ID, otherwise NativeAuth
+            var authHandler = AuthHandlerFactory.Create(tenantId, managedIdentityClientId);
             var settings = authHandler.ConfigureAuth(connectionString);
 
             // Set the application name for telemetry
