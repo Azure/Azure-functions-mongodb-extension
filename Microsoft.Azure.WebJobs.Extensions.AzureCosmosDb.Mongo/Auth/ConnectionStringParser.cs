@@ -63,7 +63,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Auth
                 var schemeMatch = Regex.Match(connectionString, @"^(mongodb(?:\+srv)?):\/\/");
                 if (!schemeMatch.Success)
                 {
-                    return;
+                    throw new FormatException("Invalid MongoDB connection string: missing or invalid scheme.");
                 }
                 Scheme = schemeMatch.Groups[1].Value;
                 connectionString = connectionString.Substring(schemeMatch.Length);
@@ -121,8 +121,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Auth
 
         public string PrepareForEntraIdAuth()
         {
+            if (!ParsedSuccessfully)
+            {
+                throw ParsingException;
+            }
+
             var sb = new StringBuilder();
-            sb.Append(Scheme ?? "mongodb");
+            sb.Append(Scheme);
             sb.Append("://");
 
             sb.Append(HostsWithPorts);
