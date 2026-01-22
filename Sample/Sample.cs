@@ -16,11 +16,11 @@ namespace Sample
     {
         [FunctionName("EntraIdAuthSample")]
         public static void EntraIdAuthRun(
-                [TimerTrigger("*/30 * * * * *")] TimerInfo myTimer,
-                [CosmosDBMongo(
-                    ConnectionStringSetting = "EntraIdConnection",
-                    TenantId = "%TenantId%")] IMongoClient client,
-                ILogger log)
+            [TimerTrigger("*/30 * * * * *")] TimerInfo myTimer,
+            [CosmosDBMongo(
+                ConnectionStringSetting = "EntraIdConnection",
+                TenantId = "%TenantId%")] IMongoClient client,
+            ILogger log)
         {
             log.LogInformation($"Entra ID Auth Sample executed at: {DateTime.Now}");
 
@@ -31,14 +31,14 @@ namespace Sample
 
                 foreach (var dbName in databases)
                 {
-                log.LogInformation($"  Database: {dbName}");
-                var db = client.GetDatabase(dbName);
-                var collections = db.ListCollectionNames().ToList();
+                    log.LogInformation($"  Database: {dbName}");
+                    var db = client.GetDatabase(dbName);
+                    var collections = db.ListCollectionNames().ToList();
 
-                foreach (var collName in collections)
-                {
-                    log.LogInformation($"    - Collection: {collName}");
-                }
+                    foreach (var collName in collections)
+                    {
+                        log.LogInformation($"    - Collection: {collName}");
+                    }   
                 }
             }
             catch (Exception ex)

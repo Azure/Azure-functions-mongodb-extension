@@ -71,22 +71,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                 });
         }
 
-        private IMongoClient CreateClientForAttribute(CosmosDBMongoAttribute attribute)
-        {
-            return CreateClient(
-                attribute.ConnectionStringSetting,
-                attribute.TenantId,
-                attribute.ManagedIdentityClientId);
-        }
-
-        private IMongoClient CreateClientForTriggerAttribute(CosmosDBMongoTriggerAttribute attribute)
-        {
-            return CreateClient(
-                attribute.ConnectionStringSetting,
-                attribute.TenantId,
-                attribute.ManagedIdentityClientId);
-        }
-
         private IMongoClient CreateClient(
             string connectionStringSetting,
             string tenantId,
@@ -119,7 +103,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                 attribute.CollectionName, 
                 attribute.TenantId,
                 attribute.ManagedIdentityClientId);
-            return CollectorCache.GetOrAdd(cacheKey, (c) => CreateClientForTriggerAttribute(attribute));
+            return CollectorCache.GetOrAdd(cacheKey, (c) => CreateClient(
+                attribute.ConnectionStringSetting,
+                attribute.TenantId,
+                attribute.ManagedIdentityClientId));
         }
 
         internal IMongoClient GetService(CosmosDBMongoAttribute attribute)
@@ -130,7 +117,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                 attribute.CollectionName, 
                 attribute.TenantId,
                 attribute.ManagedIdentityClientId);
-            return CollectorCache.GetOrAdd(cacheKey, (c) => CreateClientForAttribute(attribute));
+            return CollectorCache.GetOrAdd(cacheKey, (c) => CreateClient(
+                attribute.ConnectionStringSetting,
+                attribute.TenantId,
+                attribute.ManagedIdentityClientId));
         }
 
         internal IMongoClient GetService(string connectionString, string databaseName, string collectionName)
