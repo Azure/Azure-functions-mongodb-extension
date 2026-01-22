@@ -71,15 +71,15 @@ namespace Sample
                     ConnectionStringSetting = "MongoDBConnection")] IAsyncCollector<TestClass> collector,
             ILogger log)
         {
-        log.LogInformation($"Output binding sample executed at: {DateTime.Now}");
+            log.LogInformation($"Output binding sample executed at: {DateTime.Now}");
 
-        TestClass item = new TestClass()
-        {
-            id = Guid.NewGuid().ToString(),
-            SomeData = "some random data"
-        };
+            TestClass item = new TestClass()
+            {
+                id = Guid.NewGuid().ToString(),
+                SomeData = "some random data"
+            };
 
-        await collector.AddAsync(item);
+            await collector.AddAsync(item);
         }
 
         [FunctionName("InputBindingSample")]
