@@ -22,29 +22,29 @@ namespace Sample
                     TenantId = "%TenantId%")] IMongoClient client,
                 ILogger log)
         {
-        log.LogInformation($"Entra ID Auth Sample executed at: {DateTime.Now}");
+            log.LogInformation($"Entra ID Auth Sample executed at: {DateTime.Now}");
 
-        try
-        {
-            var databases = client.ListDatabaseNames().ToList();
-            log.LogInformation($"Connected via Entra ID. Found {databases.Count} database(s):");
-
-            foreach (var dbName in databases)
+            try
             {
-            log.LogInformation($"  Database: {dbName}");
-            var db = client.GetDatabase(dbName);
-            var collections = db.ListCollectionNames().ToList();
+                var databases = client.ListDatabaseNames().ToList();
+                log.LogInformation($"Connected via Entra ID. Found {databases.Count} database(s):");
 
-            foreach (var collName in collections)
+                foreach (var dbName in databases)
+                {
+                    log.LogInformation($"  Database: {dbName}");
+                    var db = client.GetDatabase(dbName);
+                    var collections = db.ListCollectionNames().ToList();
+
+                    foreach (var collName in collections)
+                    {
+                        log.LogInformation($"    - Collection: {collName}");
+                    }
+                }
+            }
+            catch (Exception ex)
             {
-                log.LogInformation($"    - Collection: {collName}");
+                log.LogError(ex, "Failed to connect with Entra ID authentication");
             }
-            }
-        }
-        catch (Exception ex)
-        {
-            log.LogError(ex, "Failed to connect with Entra ID authentication");
-        }
         }
 
         [FunctionName("ClientBindingSample")]
@@ -53,15 +53,15 @@ namespace Sample
             [CosmosDBMongo(ConnectionStringSetting = "MongoDBConnection")] IMongoClient client,
             ILogger log)
         {
-        var documents = client.GetDatabase("TestDatabase")
-            .GetCollection<BsonDocument>("TestCollection")
-            .Find(new BsonDocument())
-            .ToList();
+            var documents = client.GetDatabase("TestDatabase")
+                .GetCollection<BsonDocument>("TestCollection")
+                .Find(new BsonDocument())
+                .ToList();
 
-        foreach (BsonDocument d in documents)
-        {
-            log.LogInformation(d.ToString());
-        }
+            foreach (BsonDocument d in documents)
+            {
+                log.LogInformation(d.ToString());
+            }
         }
 
         [FunctionName("OutputBindingSample")]
@@ -71,15 +71,15 @@ namespace Sample
                     ConnectionStringSetting = "MongoDBConnection")] IAsyncCollector<TestClass> collector,
             ILogger log)
         {
-        log.LogInformation($"Output binding sample executed at: {DateTime.Now}");
+            log.LogInformation($"Output binding sample executed at: {DateTime.Now}");
 
-        TestClass item = new TestClass()
-        {
-            id = Guid.NewGuid().ToString(),
-            SomeData = "some random data"
-        };
+            TestClass item = new TestClass()
+            {
+                id = Guid.NewGuid().ToString(),
+                SomeData = "some random data"
+            };
 
-        await collector.AddAsync(item);
+            await collector.AddAsync(item);
         }
 
         [FunctionName("InputBindingSample")]
