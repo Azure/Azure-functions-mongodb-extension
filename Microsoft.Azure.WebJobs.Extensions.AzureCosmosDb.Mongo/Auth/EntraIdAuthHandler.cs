@@ -16,28 +16,28 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Auth
     {
         private readonly string _tenantId;
         private readonly string _managedIdentityClientId;
-        private readonly string _clientId;
-        private readonly string _clientSecret;
+        // private readonly string _clientId;
+        // private readonly string _clientSecret;
         private readonly TokenCredential _customCredential;
 
         /// <summary>
         /// Creates a new Entra ID auth handler.
-        /// Priority: Service Principal > User-assigned MI > System-assigned MI / DefaultAzureCredential
+        /// Uses User-assigned MI or System-assigned MI / DefaultAzureCredential.
         /// </summary>
         /// <param name="tenantId">Optional Azure AD tenant ID.</param>
         /// <param name="managedIdentityClientId">Optional client ID for User-assigned Managed Identity.</param>
-        /// <param name="clientId">Optional Application (Client) ID for Service Principal authentication.</param>
-        /// <param name="clientSecret">Optional Client Secret for Service Principal authentication.</param>
+        // /// <param name="clientId">Optional Application (Client) ID for Service Principal authentication.</param>
+        // /// <param name="clientSecret">Optional Client Secret for Service Principal authentication.</param>
         public EntraIdAuthHandler(
             string tenantId = null, 
-            string managedIdentityClientId = null,
-            string clientId = null,
-            string clientSecret = null)
+            string managedIdentityClientId = null)
+            // string clientId = null,
+            // string clientSecret = null)
         {
             _tenantId = tenantId;
             _managedIdentityClientId = managedIdentityClientId;
-            _clientId = clientId;
-            _clientSecret = clientSecret;
+            // _clientId = clientId;
+            // _clientSecret = clientSecret;
             _customCredential = null;
         }
 
@@ -49,8 +49,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Auth
             _customCredential = credential ?? throw new System.ArgumentNullException(nameof(credential));
             _tenantId = tenantId;
             _managedIdentityClientId = null;
-            _clientId = null;
-            _clientSecret = null;
+            // _clientId = null;
+            // _clientSecret = null;
         }
 
         public MongoClientSettings ConfigureAuth(string connectionString)
@@ -67,12 +67,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Auth
                 // Use custom TokenCredential
                 oidcCallback = new EntraIdOidcCallback(_customCredential, _tenantId);
             }
-            else if (!string.IsNullOrEmpty(_clientId) && !string.IsNullOrEmpty(_clientSecret) && !string.IsNullOrEmpty(_tenantId))
-            {
-                // Use Service Principal (ClientSecretCredential)
-                var credential = new ClientSecretCredential(_tenantId, _clientId, _clientSecret);
-                oidcCallback = new EntraIdOidcCallback(credential, _tenantId);
-            }
+            // else if (!string.IsNullOrEmpty(_clientId) && !string.IsNullOrEmpty(_clientSecret) && !string.IsNullOrEmpty(_tenantId))
+            // {
+            //     // Use Service Principal (ClientSecretCredential)
+            //     var credential = new ClientSecretCredential(_tenantId, _clientId, _clientSecret);
+            //     oidcCallback = new EntraIdOidcCallback(credential, _tenantId);
+            // }
             else
             {
                 // Use DefaultAzureCredential (System MI, User MI, or local dev credentials)

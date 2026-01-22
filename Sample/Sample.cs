@@ -101,10 +101,8 @@ namespace Sample
 
         [FunctionName("TriggerSample")]
         public static void TriggerRun(
-            [CosmosDBMongoTrigger("TestDatabase", "TestCollection",
-                ConnectionStringSetting = "MongoDBConnection",
-                LeaseDatabaseName = "TestDatabase",
-                LeaseCollectionName = "leases")] ChangeStreamDocument<BsonDocument> doc,
+            [CosmosDBMongoTrigger("%DatabaseName%", "%CollectionName%",
+                ConnectionStringSetting = "MongoDBConnection")] ChangeStreamDocument<BsonDocument> doc,
             ILogger log)
         {
             log.LogInformation($"Change detected at: {DateTime.Now}");

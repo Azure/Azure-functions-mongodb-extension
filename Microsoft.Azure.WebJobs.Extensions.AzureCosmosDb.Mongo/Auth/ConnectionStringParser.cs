@@ -1,5 +1,5 @@
 // Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the MIT License. See License. txt in the project root for license information.
+// Licensed under the MIT License. See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -42,6 +42,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Auth
         public Dictionary<string, string> QueryParameters { get; private set; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         public bool IsEntraIdConnectionString { get; private set; }
+
+        /// <summary>
+        /// Contains the exception if connection string parsing failed.
+        /// </summary>
+        public Exception ParsingException { get; private set; }
+
+        /// <summary>
+        /// Indicates whether the connection string was parsed successfully.
+        /// </summary>
+        public bool ParsedSuccessfully => ParsingException == null;
 
 
         private void ParseConnectionString()
@@ -87,9 +97,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Auth
 
                 if (!string.IsNullOrEmpty(queryPart))
                 {
-                    foreach (var param in queryPart.Split('&'))
+                    foreach (var keyValue in queryPart.Split('&').Select(p => p.Split(new[] { '=' }, 2)))
                     {
-                        var keyValue = param.Split(new[] { '=' }, 2);
                         if (keyValue.Length == 2)
                         {
                             QueryParameters[Uri.UnescapeDataString(keyValue[0])] = Uri.UnescapeDataString(keyValue[1]);
@@ -103,9 +112,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Auth
                     IsEntraIdConnectionString = true;
                 }
             }
-            catch
+            catch (Exception ex)
             {
                 IsEntraIdConnectionString = false;
+                ParsingException = ex;
             }
         }
 

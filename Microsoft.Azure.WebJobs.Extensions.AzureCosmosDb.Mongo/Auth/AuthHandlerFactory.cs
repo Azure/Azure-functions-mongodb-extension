@@ -16,21 +16,21 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Auth
         /// <param name="authMethod">The authentication method to use.</param>
         /// <param name="tenantId">Optional Azure AD tenant ID (only used for MicrosoftEntraID).</param>
         /// <param name="managedIdentityClientId">Optional client ID for User-assigned Managed Identity.</param>
-        /// <param name="clientId">Optional Application (Client) ID for Service Principal authentication.</param>
-        /// <param name="clientSecret">Optional Client Secret for Service Principal authentication.</param>
+        // /// <param name="clientId">Optional Application (Client) ID for Service Principal authentication.</param>
+        // /// <param name="clientSecret">Optional Client Secret for Service Principal authentication.</param>
         /// <returns>An authentication handler.</returns>
         public static IAuthHandler Create(
             AuthMethod authMethod, 
             string tenantId = null, 
-            string managedIdentityClientId = null,
-            string clientId = null,
-            string clientSecret = null)
+            string managedIdentityClientId = null)
+            // string clientId = null,
+            // string clientSecret = null)
         {
             switch (authMethod)
             {
                 case AuthMethod.MicrosoftEntraID:
 #if NET8_0_OR_GREATER
-                    return new EntraIdAuthHandler(tenantId, managedIdentityClientId, clientId, clientSecret);
+                    return new EntraIdAuthHandler(tenantId, managedIdentityClientId);
 #else
                     throw new PlatformNotSupportedException(
                         "Microsoft Entra ID authentication is only supported on .NET 8.0 or later. " +

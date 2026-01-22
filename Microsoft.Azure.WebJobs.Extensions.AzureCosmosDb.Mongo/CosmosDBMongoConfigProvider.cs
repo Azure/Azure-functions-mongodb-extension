@@ -55,17 +55,17 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             bindingRule.WhenIsNull(nameof(CosmosDBMongoAttribute.DatabaseName))
                 .BindToInput(attribute =>
                 {
-                    return CreateClientForAttribute(attribute);
+                    return GetService(attribute);
                 });
             bindingRule.WhenIsNull(nameof(CosmosDBMongoAttribute.CollectionName)).WhenIsNotNull(nameof(CosmosDBMongoAttribute.DatabaseName))
                 .BindToInput(attribute =>
                 {
-                    return CreateClientForAttribute(attribute).GetDatabase(attribute.DatabaseName);
+                    return GetService(attribute).GetDatabase(attribute.DatabaseName);
                 });
             bindingRule.WhenIsNotNull(nameof(CosmosDBMongoAttribute.CollectionName)).WhenIsNotNull(nameof(CosmosDBMongoAttribute.DatabaseName))
                 .BindToInput(attribute =>
                 {
-                    return CreateClientForAttribute(attribute)
+                    return GetService(attribute)
                         .GetDatabase(attribute.DatabaseName)
                         .GetCollection<BsonDocument>(attribute.CollectionName);
                 });
@@ -73,34 +73,46 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 
         private IMongoClient CreateClientForAttribute(CosmosDBMongoAttribute attribute)
         {
-            var connectionString = ResolveConnectionString(attribute.ConnectionStringSetting);
-            var clientSecret = !string.IsNullOrEmpty(attribute.ClientSecretSetting) 
-                ? ResolveConnectionString(attribute.ClientSecretSetting) 
-                : null;
-            
-            return _cosmosdbMongoBindingCollectorFactory.CreateClient(
-                connectionString,
+            return CreateClient(
+                attribute.ConnectionStringSetting,
                 attribute.AuthMethod,
                 attribute.TenantId,
-                attribute.ManagedIdentityClientId,
-                attribute.ClientId,
-                clientSecret);
+                attribute.ManagedIdentityClientId);
+                // attribute.ClientId,
+                // attribute.ClientSecretSetting);
         }
 
         private IMongoClient CreateClientForTriggerAttribute(CosmosDBMongoTriggerAttribute attribute)
         {
-            var connectionString = ResolveConnectionString(attribute.ConnectionStringSetting);
-            var clientSecret = !string.IsNullOrEmpty(attribute.ClientSecretSetting) 
-                ? ResolveConnectionString(attribute.ClientSecretSetting) 
-                : null;
-            
-            return _cosmosdbMongoBindingCollectorFactory.CreateClient(
-                connectionString,
+            return CreateClient(
+                attribute.ConnectionStringSetting,
                 attribute.AuthMethod,
                 attribute.TenantId,
-                attribute.ManagedIdentityClientId,
-                attribute.ClientId,
-                clientSecret);
+                attribute.ManagedIdentityClientId);
+                // attribute.ClientId,
+                // attribute.ClientSecretSetting);
+        }
+
+        private IMongoClient CreateClient(
+            string connectionStringSetting,
+            AuthMethod authMethod,
+            string tenantId,
+            string managedIdentityClientId)
+            // string clientId,
+            // string clientSecretSetting)
+        {
+            var connectionString = ResolveConnectionString(connectionStringSetting);
+            // var clientSecret = !string.IsNullOrEmpty(clientSecretSetting)
+            //     ? ResolveConnectionString(clientSecretSetting)
+            //     : null;
+
+            return _cosmosdbMongoBindingCollectorFactory.CreateClient(
+                connectionString,
+                authMethod,
+                tenantId,
+                managedIdentityClientId);
+                // clientId,
+                // clientSecret);
         }
 
         internal CosmosDBMongoTriggerContext CreateTriggerContext(CosmosDBMongoTriggerAttribute attribute)
@@ -116,13 +128,33 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 
         internal IMongoClient GetService(CosmosDBMongoTriggerAttribute attribute)
         {
-            string cacheKey = BuildCacheKey(attribute.ConnectionStringSetting, attribute.DatabaseName, attribute.CollectionName, attribute.AuthMethod);
+            string cacheKey = BuildCacheKey(
+                attribute.ConnectionStringSetting, 
+                attribute.DatabaseName, 
+                attribute.CollectionName, 
+                attribute.AuthMethod,
+                attribute.TenantId,
+                attribute.ManagedIdentityClientId);
+                // attribute.ClientId);
             return CollectorCache.GetOrAdd(cacheKey, (c) => CreateClientForTriggerAttribute(attribute));
+        }
+
+        internal IMongoClient GetService(CosmosDBMongoAttribute attribute)
+        {
+            string cacheKey = BuildCacheKey(
+                attribute.ConnectionStringSetting, 
+                attribute.DatabaseName, 
+                attribute.CollectionName, 
+                attribute.AuthMethod,
+                attribute.TenantId,
+                attribute.ManagedIdentityClientId);
+                // attribute.ClientId);
+            return CollectorCache.GetOrAdd(cacheKey, (c) => CreateClientForAttribute(attribute));
         }
 
         internal IMongoClient GetService(string connectionString, string databaseName, string collectionName)
         {
-            string cacheKey = BuildCacheKey(connectionString, databaseName, collectionName, AuthMethod.NativeAuth);
+            string cacheKey = BuildCacheKey(connectionString, databaseName, collectionName, AuthMethod.NativeAuth, null, null);
             return CollectorCache.GetOrAdd(cacheKey, (c) => this._cosmosdbMongoBindingCollectorFactory.CreateClient(connectionString));
         }
 
@@ -154,7 +186,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         internal MongoCollectionReference ResolveCollectionReference(CosmosDBMongoAttribute attribute)
         {
             return new MongoCollectionReference(
-                CreateClientForAttribute(attribute),
+                GetService(attribute),
                 attribute.DatabaseName,
                 attribute.CollectionName);
         }
@@ -183,7 +215,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             return connection;
         }
 
-        private static string BuildCacheKey(string connectionString, string databaseName, string collectionName, AuthMethod authMethod)
-            => $"{connectionString}|{databaseName}|{collectionName}|{authMethod}";
+        private static string BuildCacheKey(
+            string connectionString, 
+            string databaseName, 
+            string collectionName, 
+            AuthMethod authMethod,
+            string tenantId,
+            string managedIdentityClientId)
+            // string clientId)
+            => $"{connectionString}|{databaseName}|{collectionName}|{authMethod}|{tenantId ?? ""}|{managedIdentityClientId ?? ""}";
     }
 }

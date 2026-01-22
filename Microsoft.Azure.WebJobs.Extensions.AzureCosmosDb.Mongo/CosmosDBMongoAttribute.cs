@@ -108,18 +108,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         [AutoResolve]
         public string ManagedIdentityClientId { get; set; }
 
-        /// <summary>
-        /// Gets or sets the Application ID for Service Principal authentication.
-        /// Must be used together with ClientSecretSetting.
-        /// </summary>
-        [AutoResolve]
-        public string ClientId { get; set; }
+        // /// <summary>
+        // /// Gets or sets the Client ID for Service Principal authentication.
+        // /// Must be used together with ClientSecretSetting.
+        // /// </summary>
+        // [AutoResolve]
+        // public string ClientId { get; set; }
 
-        /// <summary>
-        /// Gets or sets the Client Secret for Service Principal authentication.
-        /// Must be used together with ClientId.
-        /// </summary>
-        public string ClientSecretSetting { get; set; }
+        // /// <summary>
+        // /// Gets or sets the Client Secret for Service Principal authentication.
+        // /// Must be used together with ClientId.
+        // /// </summary>
+        // public string ClientSecretSetting { get; set; }
     }
 
     public class CosmosDBMongoContext

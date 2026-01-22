@@ -14,8 +14,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             string connectionString, 
             AuthMethod authMethod, 
             string tenantId = null, 
-            string managedIdentityClientId = null,
-            string clientId = null,
-            string clientSecret = null);
+            string managedIdentityClientId = null);
+            // string clientId = null,
+            // string clientSecret = null);
     }
 }

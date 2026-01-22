@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
+using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Azure.WebJobs.Host.Triggers;
 using Microsoft.Azure.WebJobs.Logging;
 using Microsoft.Extensions.Logging;
@@ -26,60 +27,69 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
         public Task<ITriggerBinding> TryCreateAsync(TriggerBindingProviderContext context)
         {
             if (context == null)
-                throw new ArgumentNullException("context");
-            
-            var attribute = context.Parameter.GetCustomAttribute<CosmosDBMongoTriggerAttribute>(inherit: false);
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
+
+            ParameterInfo parameter = context.Parameter;
+            CosmosDBMongoTriggerAttribute attribute = parameter.GetCustomAttribute<CosmosDBMongoTriggerAttribute>(inherit: false);
             if (attribute == null)
             {
                 return Task.FromResult<ITriggerBinding>(null);
             }
-            
+
             string connectionString = _configProvider.ResolveConnectionString(attribute.ConnectionStringSetting);
-            string functionId = context.Parameter.Member.Name;
-            
+            string functionId = parameter.Member.Name;
+
             string databaseName = ResolveAttributeValue(attribute.DatabaseName);
             string collectionName = ResolveAttributeValue(attribute.CollectionName);
-            
+
             var reference = new MongoCollectionReference(
                         _configProvider.GetService(connectionString),
                         databaseName,
                         collectionName);
             reference.functionId = functionId;
-            
+
             // Resolve lease connection string (defaults to monitored cluster connection string)
             string leaseConnectionString = string.IsNullOrEmpty(attribute.LeaseConnectionStringSetting)
                 ? connectionString
                 : _configProvider.ResolveConnectionString(attribute.LeaseConnectionStringSetting);
+
+            // Resolve lease database name (defaults to monitored database name)
             string leaseDatabaseName = ResolveAttributeValue(attribute.LeaseDatabaseName);
             if (string.IsNullOrEmpty(leaseDatabaseName))
             {
-                throw new InvalidOperationException(
-                    "LeaseDatabaseName is required. Please specify a database name for the lease collection.");
+                leaseDatabaseName = databaseName;
             }
 
+            // Resolve lease collection name (defaults to "leases")
             string leaseCollectionName = ResolveAttributeValue(attribute.LeaseCollectionName);
             if (string.IsNullOrEmpty(leaseCollectionName))
             {
-                throw new InvalidOperationException(
-                    "LeaseCollectionName is required. Please specify a collection name for the lease collection.");
+                leaseCollectionName = "leases";
             }
-            
+
             reference.leaseClient = _configProvider.GetService(leaseConnectionString);
-            reference.leaseConnectionStringSetting = string.IsNullOrEmpty(attribute.LeaseConnectionStringSetting) 
-                ? attribute.ConnectionStringSetting 
+            reference.leaseConnectionStringSetting = string.IsNullOrEmpty(attribute.LeaseConnectionStringSetting)
+                ? attribute.ConnectionStringSetting
                 : attribute.LeaseConnectionStringSetting;
             reference.leaseDatabaseName = leaseDatabaseName;
             reference.leaseCollectionName = leaseCollectionName;
-            
+
             return
-                Task.FromResult<ITriggerBinding>(new CosmosDBMongoTriggerBinding(context.Parameter,
+                Task.FromResult<ITriggerBinding>(new CosmosDBMongoTriggerBinding(parameter,
                     reference,
                     this._logger));
         }
 
-        private string ResolveAttributeValue(string value)
+        /// <summary>
+        /// Resolves attribute values using the INameResolver.
+        /// Uses the same approach as the official CosmosDB Trigger:
+        /// INameResolver.ResolveWholeString() handles %xxx% syntax automatically.
+        /// </summary>
+        private string ResolveAttributeValue(string attributeValue)
         {
-            return this._nameResolver.Resolve(value) ?? value;
+            return _nameResolver.ResolveWholeString(attributeValue) ?? attributeValue;
         }
     }
 }

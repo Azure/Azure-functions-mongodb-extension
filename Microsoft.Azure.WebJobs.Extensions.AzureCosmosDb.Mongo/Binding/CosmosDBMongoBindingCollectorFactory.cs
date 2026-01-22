@@ -18,16 +18,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             string connectionString, 
             AuthMethod authMethod, 
             string tenantId = null, 
-            string managedIdentityClientId = null,
-            string clientId = null,
-            string clientSecret = null)
+            string managedIdentityClientId = null)
+            // string clientId = null,
+            // string clientSecret = null)
         {
             if (string.IsNullOrEmpty(connectionString))
             {
                 throw new ArgumentNullException(nameof(connectionString));
             }
 
-            var authHandler = AuthHandlerFactory.Create(authMethod, tenantId, managedIdentityClientId, clientId, clientSecret);
+            var authHandler = AuthHandlerFactory.Create(authMethod, tenantId, managedIdentityClientId);
             var settings = authHandler.ConfigureAuth(connectionString);
 
             // Set the application name for telemetry
