@@ -85,6 +85,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Auth
             settings.UseTls = true;
             settings.RetryWrites = false;
             settings.MaxConnectionIdleTime = System.TimeSpan.FromMinutes(2);
+            settings.ApplicationName = CosmosDBMongoConstant.AzureFunctionApplicationName;
 
             return settings;
         }

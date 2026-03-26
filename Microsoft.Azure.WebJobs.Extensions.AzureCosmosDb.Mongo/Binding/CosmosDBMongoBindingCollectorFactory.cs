@@ -28,9 +28,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             var authHandler = AuthHandlerFactory.Create(tenantId, managedIdentityClientId);
             var settings = authHandler.ConfigureAuth(connectionString);
 
-            // Set the application name for telemetry
-            settings.ApplicationName = CosmosDBMongoConstant.AzureFunctionApplicationName;
-
             return new MongoClient(settings);
         }
     }
