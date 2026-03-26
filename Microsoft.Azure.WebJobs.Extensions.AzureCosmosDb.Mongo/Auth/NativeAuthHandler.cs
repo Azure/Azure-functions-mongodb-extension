@@ -9,7 +9,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Auth
     {
         public MongoClientSettings ConfigureAuth(string connectionString)
         {
-            return MongoClientSettings.FromConnectionString(connectionString);
+            var settings = MongoClientSettings.FromConnectionString(connectionString);
+            settings.ApplicationName = CosmosDBMongoConstant.AzureFunctionApplicationName;
+            return settings;
         }
     }
 }

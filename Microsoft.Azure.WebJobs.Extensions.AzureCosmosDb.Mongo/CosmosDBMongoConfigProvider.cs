@@ -123,12 +123,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                 attribute.ManagedIdentityClientId));
         }
 
-        internal IMongoClient GetService(string connectionString, string databaseName, string collectionName)
-        {
-            string cacheKey = BuildCacheKey(connectionString, databaseName, collectionName, null, null);
-            return CollectorCache.GetOrAdd(cacheKey, (c) => this._cosmosdbMongoBindingCollectorFactory.CreateClient(connectionString));
-        }
-
         internal void ValidateConnection(CosmosDBMongoAttribute attribute, Type paramType)
         {
             if (string.IsNullOrEmpty(ResolveConnectionString(attribute.ConnectionStringSetting)))

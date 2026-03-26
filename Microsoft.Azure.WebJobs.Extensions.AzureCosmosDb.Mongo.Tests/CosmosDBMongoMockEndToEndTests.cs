@@ -61,7 +61,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Tests
             serviceMock.Setup(m => m.GetDatabase(It.IsAny<string>(), default)).Returns(monitoredDatabaseMock.Object);
 
             var factoryMock = new Mock<ICosmosDBMongoBindingCollectorFactory>(MockBehavior.Strict);
-            factoryMock.Setup(f => f.CreateClient(It.IsAny<string>())).Returns(serviceMock.Object);
+            factoryMock.Setup(f => f.CreateClient(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(serviceMock.Object);
 
             return (factoryMock, new List<dynamic> { monitoredDatabaseMock, bsonMock, itemMock, serviceMock }.AsEnumerable());
         }
