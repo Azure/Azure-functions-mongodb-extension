@@ -8,6 +8,7 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using Moq;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,6 +20,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Tests
         private Mock<IMongoClient> _mockClient;
         private Mock<IMongoDatabase> _mockDatabase;
         private Mock<IMongoCollection<LeaseDocument>> _mockCollection;
+        private Mock<IMongoIndexManager<LeaseDocument>> _mockIndexManager;
         private Mock<ILogger> _mockLogger;
         private LeaseCollectionManager _manager;
 
@@ -36,6 +38,25 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Tests
             _mockDatabase.Setup(d => d.GetCollection<LeaseDocument>(It.IsAny<string>(), null))
                 .Returns(_mockCollection.Object);
 
+            // Setup ListCollectionNamesAsync to return a cursor containing the lease collection name
+            // so InitializeAsync thinks the collection already exists and skips CreateCollectionAsync
+            var mockCursor = new Mock<IAsyncCursor<string>>();
+            mockCursor.SetupSequence(c => c.MoveNextAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true)
+                .ReturnsAsync(false);
+            mockCursor.Setup(c => c.Current).Returns(new List<string> { "testCollection" });
+            _mockDatabase.Setup(d => d.ListCollectionNamesAsync(It.IsAny<ListCollectionNamesOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(mockCursor.Object);
+
+            // Setup Indexes so the index creation in InitializeAsync doesn't throw
+            _mockIndexManager = new Mock<IMongoIndexManager<LeaseDocument>>();
+            _mockIndexManager.Setup(m => m.CreateOneAsync(
+                It.IsAny<CreateIndexModel<LeaseDocument>>(),
+                It.IsAny<CreateOneIndexOptions>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync("index1");
+            _mockCollection.Setup(c => c.Indexes).Returns(_mockIndexManager.Object);
+
             _manager = new LeaseCollectionManager(
                 _mockClient.Object,
                 "testDatabase",
@@ -46,21 +67,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo.Tests
         [TestMethod]
         public async Task InitializeAsync_CreatesIndexes()
         {
-            // Arrange
-            var mockIndexManager = new Mock<IMongoIndexManager<LeaseDocument>>();
-            _mockCollection.Setup(c => c.Indexes).Returns(mockIndexManager.Object);
-            
-            mockIndexManager.Setup(m => m.CreateOneAsync(
-                It.IsAny<CreateIndexModel<LeaseDocument>>(),
-                It.IsAny<CreateOneIndexOptions>(),
-                It.IsAny<CancellationToken>()))
-                .ReturnsAsync("index1");
-
             // Act
             await _manager.InitializeAsync();
 
             // Assert
-            mockIndexManager.Verify(m => m.CreateOneAsync(
+            _mockIndexManager.Verify(m => m.CreateOneAsync(
                 It.Is<CreateIndexModel<LeaseDocument>>(model => model.Keys != null),
                 It.IsAny<CreateOneIndexOptions>(),
                 It.IsAny<CancellationToken>()), Times.Once);
