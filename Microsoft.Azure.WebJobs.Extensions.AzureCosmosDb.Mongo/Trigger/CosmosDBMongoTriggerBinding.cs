@@ -9,6 +9,8 @@ using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
+using MongoDB.Bson.IO;
+using MongoDB.Bson.Serialization;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -37,7 +39,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
 
         public Task<ITriggerData> BindAsync(object value, ValueBindingContext context)
         {
-            var valueProvider = new CosmosDBMongoValueProvider(value);
+            IValueProvider valueProvider;
+            if (_parameter.ParameterType == typeof(string))
+            {
+                valueProvider = new CosmosDBMongoStringValueProvider(value);
+            }
+            else
+            {
+                valueProvider = new CosmosDBMongoValueProvider(value);
+            }
+
             var bindingData = new Dictionary<string, object>
             {
                 { "CosmosDBMongoTrigger", value }
@@ -101,7 +112,53 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                 return Task.FromResult(this.value);
             }
 
-            public string ToInvokeString() => string.Empty;
+            public string ToInvokeString()
+            {
+                if (this.value is ChangeStreamDocument<BsonDocument> changeStreamDoc)
+                {
+                    return changeStreamDoc.BackingDocument.ToJson(new JsonWriterSettings { OutputMode = JsonOutputMode.RelaxedExtendedJson });
+                }
+
+                return string.Empty;
+            }
+
+            public Task SetValueAsync(object value, object cancellationToken)
+            {
+                return Task.CompletedTask;
+            }
+        }
+
+        private class CosmosDBMongoStringValueProvider : IValueProvider
+        {
+            private readonly object value;
+
+            public CosmosDBMongoStringValueProvider(object value)
+            {
+                this.value = value;
+            }
+
+            public Type Type => typeof(string);
+
+            public Task<object> GetValueAsync()
+            {
+                if (this.value is ChangeStreamDocument<BsonDocument> changeStreamDoc)
+                {
+                    string json = changeStreamDoc.BackingDocument.ToJson(new JsonWriterSettings { OutputMode = JsonOutputMode.RelaxedExtendedJson });
+                    return Task.FromResult<object>(json);
+                }
+
+                return Task.FromResult<object>(this.value?.ToString() ?? string.Empty);
+            }
+
+            public string ToInvokeString()
+            {
+                if (this.value is ChangeStreamDocument<BsonDocument> changeStreamDoc)
+                {
+                    return changeStreamDoc.BackingDocument.ToJson(new JsonWriterSettings { OutputMode = JsonOutputMode.RelaxedExtendedJson });
+                }
+
+                return string.Empty;
+            }
 
             public Task SetValueAsync(object value, object cancellationToken)
             {
