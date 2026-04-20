@@ -52,6 +52,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             bindingRule.BindToCollector<OpenType.Poco>(typeof(CosmosDBMongoBindingCollectorBuilder<>), this, this._loggerFactory);
             bindingRule.BindToInput<IEnumerable<OpenType.Poco>>(typeof(CosmosDBMongoBindingEnumerableBuilder<>), this);
             bindingRule.BindToInput<List<OpenType.Poco>>(typeof(CosmosDBMongoBindingListBuilder<>), this);
+            bindingRule.BindToInput<string>(typeof(CosmosDBMongoBindingStringBuilder), this);
             bindingRule.WhenIsNull(nameof(CosmosDBMongoAttribute.DatabaseName))
                 .BindToInput(attribute =>
                 {
