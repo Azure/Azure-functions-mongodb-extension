@@ -1,8 +1,11 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using Microsoft.Extensions.Logging;
+using MongoDB.Bson;
 using MongoDB.Driver;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -37,7 +40,22 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
                     await InitializeCollection(this._reference);
                 }
 
-                await UpsertDocument(this._reference, item);
+                if (item is JArray array)
+                {
+                    foreach (JToken token in array)
+                    {
+                        await UpsertBsonDocument(this._reference, ToBsonDocument(token), cancellationToken);
+                    }
+                }
+                else if (TryConvertToBsonDocument(item, out BsonDocument document))
+                {
+                    await UpsertBsonDocument(this._reference, document, cancellationToken);
+                }
+                else
+                {
+                    await UpsertDocument(this._reference, item, cancellationToken);
+                }
+
                 this._logger.LogDebug(Events.OnBindingDataAdded, "Document upserted successfully.");
             }
             catch (Exception ex)
@@ -63,6 +81,54 @@ namespace Microsoft.Azure.WebJobs.Extensions.AzureCosmosDb.Mongo
             var database = reference.client.GetDatabase(reference.databaseName);
             // should throw error if _collection not exist and createifnotexists is false
             var collection = database.GetCollection<T>(reference.collectionName);
+        }
+
+        private static bool TryConvertToBsonDocument(T item, out BsonDocument document)
+        {
+            if (item is BsonDocument bsonDocument)
+            {
+                document = bsonDocument;
+                return true;
+            }
+
+            if (item is JObject jsonObject)
+            {
+                document = ToBsonDocument(jsonObject);
+                return true;
+            }
+
+            if (item is string json && !string.IsNullOrWhiteSpace(json))
+            {
+                JToken token = JToken.Parse(json);
+                document = ToBsonDocument(token);
+                return true;
+            }
+
+            document = null;
+            return false;
+        }
+
+        private static BsonDocument ToBsonDocument(JToken token)
+        {
+            return BsonDocument.Parse(token.ToString(Formatting.None));
+        }
+
+        private async Task UpsertBsonDocument(MongoCollectionReference reference, BsonDocument doc, CancellationToken cancellationToken = default)
+        {
+            var database = reference.client.GetDatabase(reference.databaseName);
+            var collection = database.GetCollection<BsonDocument>(reference.collectionName);
+
+            if (doc.TryGetValue("_id", out BsonValue idValue))
+            {
+                var filter = Builders<BsonDocument>.Filter.Eq("_id", idValue);
+                var options = new ReplaceOptions { IsUpsert = true };
+
+                await collection.ReplaceOneAsync(filter, doc, options, cancellationToken);
+            }
+            else
+            {
+                await collection.InsertOneAsync(doc, null, cancellationToken);
+            }
         }
 
         private async Task UpsertDocument(MongoCollectionReference reference, T doc, CancellationToken cancellationToken = default)
